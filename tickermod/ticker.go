@@ -34,7 +34,7 @@ func (t *Ticker) Init() error {
 	t.stopped = make(chan struct{})
 	for _, opt := range t.opts {
 		if err := opt(t); err != nil {
-			return fmt.Errorf("ticker.Ticker Option error: %w", err)
+			return fmt.Errorf("failed to apply option: %w", err)
 		}
 	}
 

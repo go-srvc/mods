@@ -22,7 +22,7 @@ type Server struct {
 	url             string
 }
 
-// New creates Server module with given options.
+// New creates Server with given options.
 func New(opts ...Opt) *Server {
 	return &Server{
 		opts: opts,
@@ -36,7 +36,7 @@ func (s *Server) Init() error {
 	s.shutdownTimeout = time.Minute
 	for _, opt := range s.opts {
 		if err := opt(s); err != nil {
-			return fmt.Errorf("httpmod.Server Option error: %w", err)
+			return fmt.Errorf("failed to apply option: %w", err)
 		}
 	}
 
