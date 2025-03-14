@@ -13,6 +13,7 @@ type Listener struct {
 	sigs []os.Signal
 }
 
+// New creates signal listener for given signals.
 func New(signals ...os.Signal) *Listener {
 	return &Listener{
 		sigs: signals,

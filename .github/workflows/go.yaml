@@ -38,11 +38,17 @@ jobs:
           go-version-file: ./go.work
           cache: false
 
+      - name: Download deps
+        run: make download
+
+      - name: Check mod files
+        run: make tidy-check
+
       - name: Lint
-        run: make lint
+        run: make -j4 lint
 
       - name: Test
-        run: make test
+        run: make -j4 test
 
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v4

@@ -58,14 +58,14 @@ func TestListenerInitErrors(t *testing.T) {
 			expectedErr: errOpt,
 		},
 		{
-			name:        "ErrMissingWithFunc",
+			name:        "ErrMissingTickFunc",
 			ticker:      tickermod.New(tickermod.WithInterval(time.Second)),
-			expectedErr: tickermod.ErrMissingWithFunc,
+			expectedErr: tickermod.ErrMissingTickFunc,
 		},
 		{
-			name:        "ErrMissingWithInterval",
+			name:        "ErrMissingInterval",
 			ticker:      tickermod.New(tickermod.WithFunc(func() error { return nil })),
-			expectedErr: tickermod.ErrMissingWithInterval,
+			expectedErr: tickermod.ErrMissingInterval,
 		},
 	}
 
