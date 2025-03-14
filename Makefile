@@ -1,12 +1,13 @@
 MOD_PATHS  := $(wildcard ./*mod/)
-MOD_NAMES  := $(MOD_PATHS:./%/=%)
-MODS_TIDY  := $(MOD_NAMES:%=tidy/%)
-MODS_TEST  := $(MOD_NAMES:%=test/%)
-MODS_LINT  := $(MOD_NAMES:%=lint/%)
-MODS_TOOLS := $(MOD_NAMES:%=tools/%)
+MOD_NAMES  := ${MOD_PATHS:./%/=%}
+MODS_TIDY  := ${MOD_NAMES:%=tidy/%}
+MODS_CHECK := ${MOD_NAMES:%=tidy-check/%}
+MODS_TEST  := ${MOD_NAMES:%=test/%}
+MODS_LINT  := ${MOD_NAMES:%=lint/%}
+MODS_TOOLS := ${MOD_NAMES:%=tools/%}
 
 .PHONY: all
-all: clean .WAIT lint test
+all: clean tidy-check .WAIT lint test
 
 .PHONY: lint
 lint: ${MODS_LINT} ## Run linter
@@ -29,6 +30,19 @@ tidy: ${MODS_TIDY}
 .PHONY: ${MODS_TIDY}
 ${MODS_TIDY}:
 	cd ./${@F} && go mod tidy
+
+.PHONY:download ## Download deps for all mods
+download:
+	go work use -r
+	go mod download
+	git diff --exit-code --name-status -- go.work go.work.sum
+
+.PHONY: tidy-check
+tidy-check: ${MODS_CHECK} ## Check if all mods are tidy
+.PHONY: ${MODS_CHECK}
+${MODS_CHECK}:
+	cd ./${@F} && go mod tidy
+	git diff --exit-code --name-status -- ./${@F}/go.mod ./${@F}/go.sum
 
 .PHONY: tools
 tools: ${MODS_TOOLS} ## Update tools
