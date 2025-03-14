@@ -48,14 +48,14 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./*/coverage.txt
+          files: ./coverage/*.txt
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./*/junit.xml
+          files: ./junit/*.xml
 
       - uses: actions/cache/save@v4
         if: ${{ env.IS_MAIN }}

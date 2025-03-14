@@ -14,14 +14,15 @@ lint: ${MODS_LINT} ## Run linter
 
 .PHONY: ${MODS_LINT}
 ${MODS_LINT}:
-	cd ./${@F} && go tool github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=15m ./...
+	go tool github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=15m ./${@F}/...
 
 .PHONY: test
 test: ${MODS_TEST} ## Run tests
 
 .PHONY: ${MODS_TEST}
 ${MODS_TEST}:
-	cd ./${@F} && go tool gotest.tools/gotestsum --junitfile=junit.xml -- -race -covermode=atomic -coverprofile=coverage.txt ./...
+	mkdir -p coverage junit
+	go tool gotest.tools/gotestsum --junitfile=junit/${@F}.xml -- -race -covermode=atomic -coverprofile=coverage/${@F}.txt ./${@F}/...
 
 .PHONY:tidy ## tidy all mods
 tidy: ${MODS_TIDY}

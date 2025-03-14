@@ -1,2 +1,4 @@
 coverage.txt
 junit.xml
+/coverage/
+/junit/
