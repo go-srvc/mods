@@ -80,7 +80,18 @@ func (s *Server) ID() string { return ID }
 
 // WithServer sets http.Server for module.
 func WithServer(srv *http.Server) Opt {
+	return WithServerFn(func() (*http.Server, error) {
+		return srv, nil
+	})
+}
+
+// WithServerFn sets http.Server using value returned from fn.
+func WithServerFn(fn func() (*http.Server, error)) Opt {
 	return func(s *Server) error {
+		srv, err := fn()
+		if err != nil {
+			return err
+		}
 		s.srv = srv
 		return nil
 	}
@@ -88,7 +99,18 @@ func WithServer(srv *http.Server) Opt {
 
 // WithAddr sets http.Server.Addr.
 func WithAddr(addr string) Opt {
+	return WithAddrFn(func() (string, error) {
+		return addr, nil
+	})
+}
+
+// WithAddrFn sets http.Server.Addr using value returned from fn.
+func WithAddrFn(fn func() (string, error)) Opt {
 	return func(s *Server) error {
+		addr, err := fn()
+		if err != nil {
+			return err
+		}
 		s.srv.Addr = addr
 		return nil
 	}
@@ -96,7 +118,18 @@ func WithAddr(addr string) Opt {
 
 // WithHandler sets http.Server.Handler.
 func WithHandler(h http.Handler) Opt {
+	return WithHandlerFn(func() (http.Handler, error) {
+		return h, nil
+	})
+}
+
+// WithHandlerFn sets http.Server.Handler using value returned from fn.
+func WithHandlerFn(fn func() (http.Handler, error)) Opt {
 	return func(s *Server) error {
+		h, err := fn()
+		if err != nil {
+			return err
+		}
 		s.srv.Handler = h
 		return nil
 	}

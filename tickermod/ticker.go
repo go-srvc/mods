@@ -9,8 +9,8 @@ import (
 const ID = "tickermod"
 
 const (
-	ErrMissingWithInterval = errStr("ticker.Ticker missing WithInterval option")
-	ErrMissingWithFunc     = errStr("ticker.Ticker missing WithFunc option")
+	ErrMissingInterval = errStr("interval not set")
+	ErrMissingTickFunc = errStr("tick function not set")
 )
 
 type errStr string
@@ -40,9 +40,9 @@ func (t *Ticker) Init() error {
 
 	switch {
 	case t.t == nil:
-		return ErrMissingWithInterval
+		return ErrMissingInterval
 	case t.fn == nil:
-		return ErrMissingWithFunc
+		return ErrMissingTickFunc
 	}
 
 	return nil
@@ -71,13 +71,27 @@ func (t *Ticker) ID() string { return ID }
 
 type Opt func(*Ticker) error
 
+// WithInterval sets ticker interval.
 func WithInterval(d time.Duration) Opt {
+	return WithIntervalFn(func() (time.Duration, error) {
+		return d, nil
+	})
+}
+
+// WithIntervalFn sets ticker interval using provided function.
+func WithIntervalFn(fn func() (time.Duration, error)) Opt {
 	return func(t *Ticker) error {
+		d, err := fn()
+		if err != nil {
+			return err
+		}
 		t.t = time.NewTicker(d)
 		return nil
 	}
 }
 
+// WithFunc sets function to be called on each tick.
+// If non nil error is returned, ticker stops.
 func WithFunc(fn func() error) Opt {
 	return func(t *Ticker) error {
 		t.fn = fn
