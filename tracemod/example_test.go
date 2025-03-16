@@ -7,8 +7,6 @@ import (
 
 func ExampleNew() {
 	srvc.RunAndExit(
-		tracemod.New(
-			tracemod.WithDefaults(),
-		),
+		tracemod.New(),
 	)
 }

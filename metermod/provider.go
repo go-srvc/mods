@@ -3,17 +3,21 @@ package metermod
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log/slog"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/sdk/metric"
 )
 
 const ID = "metermod"
 
-const ErrMissingProvider = errStr("meter provider not set")
+const (
+	ErrMissingProvider = errStr("meter provider not set")
+	ErrFlushFailed     = errStr("failed to flush remaining metrics")
+)
 
 type errStr string
 
@@ -25,9 +29,9 @@ type Provider struct {
 	opts     []Opt
 }
 
-// New creates tracer provider module with given options.
+// New creates meter provider module with sane defaults.
 func New(opts ...Opt) *Provider {
-	return &Provider{opts: opts}
+	return &Provider{opts: append([]Opt{WithHTTP()}, opts...)}
 }
 
 func (p *Provider) Init() error {
@@ -53,13 +57,12 @@ func (p *Provider) Run() error {
 
 func (p *Provider) Stop() error {
 	close(p.done)
-	err := p.provider.ForceFlush(context.Background())
-	if err != nil {
-		slog.Warn("failed to export remaining spans",
-			slog.String("error", err.Error()),
-		)
+	flushErr := p.provider.ForceFlush(context.Background())
+	if flushErr != nil {
+		flushErr = fmt.Errorf("%w: %w", ErrFlushFailed, flushErr)
 	}
-	return p.provider.Shutdown(context.Background())
+	shutdowErr := p.provider.Shutdown(context.Background())
+	return errors.Join(flushErr, shutdowErr)
 }
 
 func (p *Provider) ID() string { return ID }
@@ -85,13 +88,26 @@ func WithProviderFn(fn func() (*metric.MeterProvider, error)) Opt {
 	}
 }
 
-// WithDefaults creates GRPC exporter with batcher using OTEL_* env configs.
-// Env spec: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/configuration/sdk-environment-variables.md
-func WithDefaults() Opt {
+// WithHTTP creates meter provider with periodic reader using http exporter from OTEL_* env configs.
+// Env variables: https://pkg.go.dev/go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp
+func WithHTTP() Opt {
 	return func(p *Provider) error {
 		exp, err := otlpmetrichttp.New(context.Background())
 		if err != nil {
 			return fmt.Errorf("failed to create http exporter: %w", err)
+		}
+		p.provider = metric.NewMeterProvider(metric.WithReader(metric.NewPeriodicReader(exp)))
+		return nil
+	}
+}
+
+// WithGRPC creates meter provider with periodic reader using grpc exporter from OTEL_* env configs.
+// Env variables: https://pkg.go.dev/go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc
+func WithGRPC() Opt {
+	return func(p *Provider) error {
+		exp, err := otlpmetricgrpc.New(context.Background())
+		if err != nil {
+			return fmt.Errorf("failed to create grpc exporter: %w", err)
 		}
 		p.provider = metric.NewMeterProvider(metric.WithReader(metric.NewPeriodicReader(exp)))
 		return nil
