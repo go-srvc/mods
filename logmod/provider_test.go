@@ -1,4 +1,4 @@
-package metermod_test
+package logmod_test
 
 import (
 	"context"
@@ -8,19 +8,20 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/go-srvc/mods/metermod"
+	"github.com/go-srvc/mods/logmod"
 	"github.com/heppu/errgroup"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
-	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
+	"go.opentelemetry.io/otel/log/global"
+	"go.opentelemetry.io/otel/sdk/log"
 )
 
 func TestProvider(t *testing.T) {
 	test := []struct {
 		name        string
-		opts        []metermod.Opt
+		opts        []logmod.Opt
 		contentType string
 		err         error
 	}{
@@ -30,15 +31,14 @@ func TestProvider(t *testing.T) {
 		},
 		{
 			name:        "WithHTTP",
-			opts:        []metermod.Opt{metermod.WithHTTP()},
+			opts:        []logmod.Opt{logmod.WithHTTP()},
 			contentType: "application/x-protobuf",
 		},
 		{
-			// We dont have proper GRPC server so exporter will retry until it reached OTEL_EXPORTER_OTLP_METRICS_TIMEOUT
+			// We dont have proper GRPC server so exporter will retry until it reached OTEL_EXPORTER_OTLP_LOGS_TIMEOUT
 			name:        "WithGRPC",
-			opts:        []metermod.Opt{metermod.WithGRPC()},
+			opts:        []logmod.Opt{logmod.WithGRPC()},
 			contentType: "",
-			err:         metermod.ErrFlushFailed,
 		},
 	}
 
@@ -52,44 +52,45 @@ func TestProvider(t *testing.T) {
 			t.Cleanup(srv.Close)
 
 			t.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", srv.URL)
-			t.Setenv("OTEL_EXPORTER_OTLP_METRICS_TIMEOUT", "10") // Faster timeout for GRPC test
+			t.Setenv("OTEL_EXPORTER_OTLP_LOGS_TIMEOUT", "10") // Faster timeout for GRPC test
 
-			p := metermod.New(tt.opts...)
+			p := logmod.New(tt.opts...)
 			require.NoError(t, p.Init())
 			wg := &errgroup.ErrGroup{}
 			wg.Go(p.Run)
 
-			_, span := otel.GetTracerProvider().Tracer("test").Start(context.Background(), "test")
-			span.End()
+			l := otelslog.NewLogger("test")
+			l.Info("test")
 
 			require.ErrorIs(t, p.Stop(), tt.err)
 			require.NoError(t, wg.Wait())
-			require.Equal(t, "metermod", p.ID())
+			require.Equal(t, "logmod", p.ID())
 			require.True(t, called.Load())
 		})
 	}
 }
 
 func TestProvider_WithProvider_nil(t *testing.T) {
-	p := metermod.New(metermod.WithProvider(nil))
-	require.ErrorIs(t, p.Init(), metermod.ErrMissingProvider)
+	p := logmod.New(logmod.WithProvider(nil))
+	require.ErrorIs(t, p.Init(), logmod.ErrMissingProvider)
 }
 
 func TestProvider_WithProviderFn_Err(t *testing.T) {
 	testErr := errors.New("test")
-	p := metermod.New(metermod.WithProviderFn(func() (*metric.MeterProvider, error) {
+	p := logmod.New(logmod.WithProviderFn(func() (*log.LoggerProvider, error) {
 		return nil, testErr
 	}))
 	require.ErrorIs(t, p.Init(), testErr)
 }
 
 func TestProvider_SetsGlobalProvider(t *testing.T) {
-	exp, err := otlpmetrichttp.New(context.Background())
+	exp, err := otlploghttp.New(context.Background())
 	require.NoError(t, err)
-	mp := metric.NewMeterProvider(metric.WithReader(metric.NewPeriodicReader(exp)))
-	p := metermod.New(metermod.WithProvider(mp))
+	lp := log.NewLoggerProvider(log.WithProcessor(log.NewBatchProcessor(exp)))
+
+	p := logmod.New(logmod.WithProvider(lp))
 	require.NoError(t, p.Init())
 
-	gp := otel.GetMeterProvider()
-	require.Equal(t, mp, gp)
+	gp := global.GetLoggerProvider()
+	require.Equal(t, lp, gp)
 }
