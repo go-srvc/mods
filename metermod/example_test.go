@@ -7,8 +7,6 @@ import (
 
 func ExampleNew() {
 	srvc.RunAndExit(
-		metermod.New(
-			metermod.WithDefaults(),
-		),
+		metermod.New(),
 	)
 }
