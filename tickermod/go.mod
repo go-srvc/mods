@@ -2,6 +2,11 @@ module github.com/go-srvc/mods/tickermod
 
 go 1.24.1
 
+tool (
+	github.com/golangci/golangci-lint/cmd/golangci-lint
+	gotest.tools/gotestsum
+)
+
 require (
 	github.com/go-srvc/srvc v0.0.1
 	github.com/heppu/errgroup v1.0.0
@@ -198,9 +203,4 @@ require (
 	honnef.co/go/tools v0.6.1 // indirect
 	mvdan.cc/gofumpt v0.7.0 // indirect
 	mvdan.cc/unparam v0.0.0-20240528143540-8a5130ca722f // indirect
-)
-
-tool (
-	github.com/golangci/golangci-lint/cmd/golangci-lint
-	gotest.tools/gotestsum
 )

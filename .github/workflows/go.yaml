@@ -42,10 +42,10 @@ jobs:
         run: make download
 
       - name: Check mod files
-        run: make tidy-check
+        run: make -j4 tidy-check
 
       - name: Lint
-        run: make -j4 lint
+        run: make lint # or golangci-lint doesn't like parallel runs, hence no -j4 flag.
 
       - name: Test
         run: make -j4 test
@@ -54,14 +54,14 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/*.txt
+          files: ./.output/coverage/*.txt
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./junit/*.xml
+          files: ./.output/junit/*.xml
 
       - uses: actions/cache/save@v4
         if: ${{ env.IS_MAIN }}
