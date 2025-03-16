@@ -42,13 +42,13 @@ jobs:
         run: make download
 
       - name: Check mod files
-        run: make -j4 tidy-check
+        run: make -j6 tidy-check
 
       - name: Lint
-        run: make lint # or golangci-lint doesn't like parallel runs, hence no -j4 flag.
+        run: make lint # or golangci-lint doesn't like parallel runs, hence no -j flag.
 
       - name: Test
-        run: make -j4 test
+        run: make -j6 test
 
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v4

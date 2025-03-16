@@ -9,6 +9,7 @@ MODS_TOOLS := ${MOD_NAMES:%=tools/%}
 .PHONY: all
 all: clean tidy-check .WAIT lint test
 
+.NOTPARALLEL: lint
 .PHONY: lint
 lint: ${MODS_LINT} ## Run linter
 
