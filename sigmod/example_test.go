@@ -1,11 +1,11 @@
-package signalmod_test
+package sigmod_test
 
 import (
 	"os"
 	"syscall"
 	"time"
 
-	"github.com/go-srvc/mods/signalmod"
+	"github.com/go-srvc/mods/sigmod"
 	"github.com/go-srvc/srvc"
 )
 
@@ -17,6 +17,6 @@ func ExampleNew() {
 	}()
 
 	srvc.RunAndExit(
-		signalmod.New(os.Interrupt),
+		sigmod.New(os.Interrupt),
 	)
 }

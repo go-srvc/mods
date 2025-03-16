@@ -1,12 +1,12 @@
-// Package signalmod provides signal listening as a module.
-package signalmod
+// Package sigmod provides signal listening as a module.
+package sigmod
 
 import (
 	"os"
 	"os/signal"
 )
 
-const ID = "signalmod"
+const ID = "sigmod"
 
 type Listener struct {
 	ch   chan os.Signal

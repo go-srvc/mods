@@ -1,4 +1,4 @@
-module github.com/go-srvc/mods/signalmod
+module github.com/go-srvc/mods/sigmod
 
 go 1.24.1
 
