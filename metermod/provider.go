@@ -1,5 +1,5 @@
-// Package tracemod provides OpenTelemetry trace provider as a module.
-package tracemod
+// Package metermod provides OpenTelemetry meter provider as a module.
+package metermod
 
 import (
 	"context"
@@ -7,24 +7,22 @@ import (
 	"log/slog"
 
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
+	"go.opentelemetry.io/otel/sdk/metric"
 )
 
-const ID = "tracemod"
+const ID = "metermod"
 
-const ErrMissingProvider = errStr("trace provider not set")
+const ErrMissingProvider = errStr("meter provider not set")
 
 type errStr string
 
 func (e errStr) Error() string { return string(e) }
 
 type Provider struct {
-	provider   *trace.TracerProvider
-	propagator propagation.TextMapPropagator
-	done       chan struct{}
-	opts       []Opt
+	provider *metric.MeterProvider
+	done     chan struct{}
+	opts     []Opt
 }
 
 // New creates tracer provider module with given options.
@@ -34,11 +32,6 @@ func New(opts ...Opt) *Provider {
 
 func (p *Provider) Init() error {
 	p.done = make(chan struct{})
-	p.propagator = propagation.NewCompositeTextMapPropagator(
-		propagation.TraceContext{},
-		propagation.Baggage{},
-	)
-
 	for _, opt := range p.opts {
 		if err := opt(p); err != nil {
 			return fmt.Errorf("failed to apply option: %w", err)
@@ -49,8 +42,7 @@ func (p *Provider) Init() error {
 		return ErrMissingProvider
 	}
 
-	otel.SetTracerProvider(p.provider)
-	otel.SetTextMapPropagator(p.propagator)
+	otel.SetMeterProvider(p.provider)
 	return nil
 }
 
@@ -74,15 +66,15 @@ func (p *Provider) ID() string { return ID }
 
 type Opt func(*Provider) error
 
-// WithProvider sets the underlying trace provider for module.
-func WithProvider(exp *trace.TracerProvider) Opt {
-	return WithProviderFn(func() (*trace.TracerProvider, error) {
+// WithProvider sets the underlying meter provider for module.
+func WithProvider(exp *metric.MeterProvider) Opt {
+	return WithProviderFn(func() (*metric.MeterProvider, error) {
 		return exp, nil
 	})
 }
 
-// WithProviderFn sets the underlying trace provider for module using given function.
-func WithProviderFn(fn func() (*trace.TracerProvider, error)) Opt {
+// WithProviderFn sets the underlying meter provider for module using given function.
+func WithProviderFn(fn func() (*metric.MeterProvider, error)) Opt {
 	return func(p *Provider) error {
 		prov, err := fn()
 		if err != nil {
@@ -97,19 +89,11 @@ func WithProviderFn(fn func() (*trace.TracerProvider, error)) Opt {
 // Env spec: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/configuration/sdk-environment-variables.md
 func WithDefaults() Opt {
 	return func(p *Provider) error {
-		exp, err := otlptracegrpc.New(context.Background())
+		exp, err := otlpmetrichttp.New(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to create grpc exporter: %w", err)
+			return fmt.Errorf("failed to create http exporter: %w", err)
 		}
-		p.provider = trace.NewTracerProvider(trace.WithBatcher(exp))
-		return nil
-	}
-}
-
-// WithPropagator allows setting custom text map propagator.
-func WithPropagator(prop propagation.TextMapPropagator) Opt {
-	return func(p *Provider) error {
-		p.propagator = prop
+		p.provider = metric.NewMeterProvider(metric.WithReader(metric.NewPeriodicReader(exp)))
 		return nil
 	}
 }
