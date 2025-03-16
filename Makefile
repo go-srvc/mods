@@ -33,7 +33,7 @@ ${MODS_TIDY}:
 
 .PHONY:download ## Download deps for all mods
 download:
-	go work use -r
+	go work use -r .
 	go mod download
 	git diff --exit-code --name-status -- go.work go.work.sum
 
