@@ -4,7 +4,7 @@ use (
 	./httpmod
 	./logmod
 	./metermod
-	./signalmod
+	./sigmod
 	./sqlxmod
 	./tickermod
 	./tracemod
