@@ -18,10 +18,10 @@ type errStr string
 func (e errStr) Error() string { return string(e) }
 
 type Ticker struct {
-	t       *time.Ticker
-	stopped chan struct{}
-	fn      func() error
-	opts    []Opt
+	t    *time.Ticker
+	done chan struct{}
+	fn   func() error
+	opts []Opt
 }
 
 // New creates ticker with given options.
@@ -31,7 +31,7 @@ func New(opts ...Opt) *Ticker {
 }
 
 func (t *Ticker) Init() error {
-	t.stopped = make(chan struct{})
+	t.done = make(chan struct{})
 	for _, opt := range t.opts {
 		if err := opt(t); err != nil {
 			return fmt.Errorf("failed to apply option: %w", err)
@@ -55,14 +55,14 @@ func (t *Ticker) Run() error {
 			if err := t.fn(); err != nil {
 				return err
 			}
-		case <-t.stopped:
+		case <-t.done:
 			return nil
 		}
 	}
 }
 
 func (t *Ticker) Stop() error {
-	defer close(t.stopped)
+	defer close(t.done)
 	t.t.Stop()
 	return nil
 }
