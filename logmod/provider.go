@@ -2,10 +2,12 @@
 package logmod
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
@@ -119,9 +121,10 @@ func WithGRPC() Opt {
 }
 
 // WithSlog sets slog's default logger to otelslog logger.
+// By default logger will be named "default" or taken from OTEL_SERVICE_NAME env variable if present.
 func WithSlog() Opt {
 	return func(p *Provider) error {
-		l := otelslog.NewLogger("app", otelslog.WithLoggerProvider(global.GetLoggerProvider()))
+		l := otelslog.NewLogger(cmp.Or(os.Getenv("OTEL_SERVICE_NAME"), "default"), otelslog.WithLoggerProvider(global.GetLoggerProvider()))
 		slog.SetDefault(l)
 		return nil
 	}
