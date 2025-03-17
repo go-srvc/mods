@@ -5,7 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/log/global"
@@ -26,12 +28,16 @@ type Provider struct {
 	opts     []Opt
 }
 
-// New creates log provider module with sane defaults.
+// New creates log provider module with sane defaults if no options are provided.
+// By default, it uses HTTP exporter and sets slog's default logger to otelslog logger.
 // For instructions on how to integrate log provider with logger of your choice,
 // see the list of ready made bridge libraries:
 // https://opentelemetry.io/ecosystem/registry/?language=go&component=log-bridge
 func New(opts ...Opt) *Provider {
-	return &Provider{opts: append([]Opt{WithHTTP()}, opts...)}
+	if len(opts) == 0 {
+		opts = []Opt{WithHTTP(), WithSlog()}
+	}
+	return &Provider{opts: opts}
 }
 
 func (p *Provider) Init() error {
@@ -108,6 +114,15 @@ func WithGRPC() Opt {
 			return fmt.Errorf("failed to create grpc exporter: %w", err)
 		}
 		p.provider = log.NewLoggerProvider(log.WithProcessor(log.NewBatchProcessor(exp)))
+		return nil
+	}
+}
+
+// WithSlog sets slog's default logger to otelslog logger.
+func WithSlog() Opt {
+	return func(p *Provider) error {
+		l := otelslog.NewLogger("app", otelslog.WithLoggerProvider(global.GetLoggerProvider()))
+		slog.SetDefault(l)
 		return nil
 	}
 }
