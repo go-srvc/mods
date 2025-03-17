@@ -5,6 +5,7 @@ use (
 	./logmod
 	./metermod
 	./sigmod
+	./sqlmod
 	./sqlxmod
 	./tickermod
 	./tracemod
