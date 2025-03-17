@@ -2,8 +2,10 @@
 package sqlxmod
 
 import (
+	"database/sql"
 	"fmt"
 
+	"github.com/XSAM/otelsql"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -30,47 +32,47 @@ func New(opts ...Opt) *DB {
 	return &DB{opts: opts}
 }
 
-func (db *DB) Init() error {
-	db.done = make(chan struct{})
-	for _, opt := range db.opts {
-		if err := opt(db); err != nil {
+func (d *DB) Init() error {
+	d.done = make(chan struct{})
+	for _, opt := range d.opts {
+		if err := opt(d); err != nil {
 			return fmt.Errorf("failed to apply option: %w", err)
 		}
 	}
 
-	if db.dbx == nil {
+	if d.dbx == nil {
 		return ErrDBNotSet
 	}
 
 	return nil
 }
 
-func (db *DB) Run() error {
-	<-db.done
+func (d *DB) Run() error {
+	<-d.done
 	return nil
 }
 
-func (db *DB) Stop() error {
-	defer close(db.done)
-	// db.dbx.
+func (d *DB) Stop() error {
+	defer close(d.done)
+	d.dbx.Close()
 	return nil
 }
 
-func (db *DB) ID() string { return ID }
+func (d *DB) ID() string { return ID }
 
 // DB returns *sqlx.DB instance.
 // This should be only call after Init.
-func (db *DB) DB() *sqlx.DB { return db.dbx }
+func (d *DB) DB() *sqlx.DB { return d.dbx }
 
 type Opt func(*DB) error
 
 func WithDSN(driver, dsn string) Opt {
-	return func(db *DB) error {
+	return func(d *DB) error {
 		dbx, err := sqlx.Open(driver, dsn)
 		if err != nil {
 			return fmt.Errorf("%w: %w", ErrFailedOpenDB, err)
 		}
-		db.dbx = dbx
+		d.dbx = dbx
 		return nil
 	}
 }
@@ -84,12 +86,37 @@ func WithDBx(dbx *sqlx.DB) Opt {
 
 // WithDBxFn sets *sqlx.DB using value returned from fn.
 func WithDBxFn(fn func() (*sqlx.DB, error)) Opt {
-	return func(db *DB) error {
+	return func(d *DB) error {
 		dbx, err := fn()
 		if err != nil {
 			return err
 		}
-		db.dbx = dbx
+		d.dbx = dbx
 		return nil
+	}
+}
+
+// WithDB creates *sqlx.DB from *sql.DB.
+func WithDB(db *sql.DB, driver string) Opt {
+	return func(d *DB) error {
+		d.dbx = sqlx.NewDb(db, driver)
+		return nil
+	}
+}
+
+// WithOtel registers *sqlx.DB with OpenTelemetry.
+func WithOtel(driver, dsn string, opts ...otelsql.Option) Opt {
+	return func(d *DB) error {
+		db, err := otelsql.Open(driver, dsn, opts...)
+		if err != nil {
+			return err
+		}
+
+		err = otelsql.RegisterDBStatsMetrics(db, opts...)
+		if err != nil {
+			return err
+		}
+
+		return WithDB(db, driver)(d)
 	}
 }
