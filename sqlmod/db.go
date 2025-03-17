@@ -4,6 +4,8 @@ package sqlmod
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/XSAM/otelsql"
 )
 
 const ID = "sqlmod"
@@ -73,15 +75,15 @@ func WithDSN(driver, dsn string) Opt {
 	}
 }
 
-// WithDBx sets *sql.DB for module.
-func WithDBx(db *sql.DB) Opt {
-	return WithDBxFn(func() (*sql.DB, error) {
+// WithDB sets *sql.DB for module.
+func WithDB(db *sql.DB) Opt {
+	return WithDBFn(func() (*sql.DB, error) {
 		return db, nil
 	})
 }
 
-// WithDBxFn sets *sql.DB using value returned from fn.
-func WithDBxFn(fn func() (*sql.DB, error)) Opt {
+// WithDBFn sets *sql.DB using value returned from fn.
+func WithDBFn(fn func() (*sql.DB, error)) Opt {
 	return func(d *DB) error {
 		db, err := fn()
 		if err != nil {
@@ -89,5 +91,22 @@ func WithDBxFn(fn func() (*sql.DB, error)) Opt {
 		}
 		d.db = db
 		return nil
+	}
+}
+
+// WithOtel creates *sql.DB and instruments it with OpenTelemetry.
+func WithOtel(driver, dsn string, opts ...otelsql.Option) Opt {
+	return func(d *DB) error {
+		db, err := otelsql.Open(driver, dsn, opts...)
+		if err != nil {
+			return err
+		}
+
+		err = otelsql.RegisterDBStatsMetrics(db, opts...)
+		if err != nil {
+			return err
+		}
+
+		return WithDB(db)(d)
 	}
 }
