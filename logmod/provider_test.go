@@ -33,14 +33,14 @@ func TestProvider(t *testing.T) {
 		},
 		{
 			name:         "WithHTTP",
-			opts:         []logmod.Opt{logmod.WithHTTP(), logmod.WithSlog()},
+			opts:         []logmod.Opt{logmod.WithHTTP()},
 			contentType:  "application/x-protobuf",
 			expectCalled: true,
 		},
 		{
 			// We dont have proper GRPC server so exporter will retry until it reached OTEL_EXPORTER_OTLP_LOGS_TIMEOUT
 			name:         "WithGRPC",
-			opts:         []logmod.Opt{logmod.WithGRPC(), logmod.WithSlog()},
+			opts:         []logmod.Opt{logmod.WithGRPC()},
 			contentType:  "",
 			expectCalled: true,
 		},

@@ -6,11 +6,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 	"strings"
 
-	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
@@ -20,7 +18,7 @@ import (
 
 const ID = "logmod"
 
-const ErrMissingProvider = errStr("meter provider not set")
+const ErrMissingProvider = errStr("log provider not set")
 
 type errStr string
 
@@ -33,13 +31,13 @@ type Provider struct {
 }
 
 // New creates log provider module with sane defaults if no options are provided.
-// Default options are: WithEnv and WithSlog .
+// Default options are: WithEnv.
 // For instructions on how to integrate log provider with logger of your choice,
 // see the list of ready made bridge libraries:
 // https://opentelemetry.io/ecosystem/registry/?language=go&component=log-bridge
 func New(opts ...Opt) *Provider {
 	if len(opts) == 0 {
-		opts = []Opt{WithEnv(), WithSlog()}
+		opts = []Opt{WithEnv()}
 	}
 	return &Provider{opts: opts}
 }
@@ -151,15 +149,5 @@ func WithEnv() Opt {
 		default:
 			return WithStdout()(p)
 		}
-	}
-}
-
-// WithSlog sets slog's default logger to otelslog logger.
-// By default logger will be named "default" or taken from OTEL_SERVICE_NAME env variable if present.
-func WithSlog() Opt {
-	return func(p *Provider) error {
-		l := otelslog.NewLogger(cmp.Or(os.Getenv("OTEL_SERVICE_NAME"), "default"), otelslog.WithLoggerProvider(global.GetLoggerProvider()))
-		slog.SetDefault(l)
-		return nil
 	}
 }
