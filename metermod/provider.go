@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
@@ -30,8 +31,12 @@ type Provider struct {
 }
 
 // New creates meter provider module with sane defaults.
+// Default options are: WithHTTP and WithRuntimeMetrics.
 func New(opts ...Opt) *Provider {
-	return &Provider{opts: append([]Opt{WithHTTP()}, opts...)}
+	if len(opts) == 0 {
+		opts = []Opt{WithHTTP(), WithRuntimeMetrics()}
+	}
+	return &Provider{opts: opts}
 }
 
 func (p *Provider) Init() error {
@@ -111,5 +116,11 @@ func WithGRPC() Opt {
 		}
 		p.provider = metric.NewMeterProvider(metric.WithReader(metric.NewPeriodicReader(exp)))
 		return nil
+	}
+}
+
+func WithRuntimeMetrics(opts ...runtime.Option) Opt {
+	return func(p *Provider) error {
+		return runtime.Start(opts...)
 	}
 }
