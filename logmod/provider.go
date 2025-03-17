@@ -55,7 +55,6 @@ func (p *Provider) Init() error {
 	}
 
 	global.SetLoggerProvider(p.provider)
-	fmt.Println("init done")
 	return nil
 }
 
