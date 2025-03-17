@@ -14,6 +14,7 @@ require (
 	go.opentelemetry.io/contrib/bridges/otelslog v0.10.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.11.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.11.0
+	go.opentelemetry.io/otel/exporters/stdout/stdoutlog v0.11.0
 	go.opentelemetry.io/otel/log v0.11.0
 	go.opentelemetry.io/otel/sdk/log v0.11.0
 )
