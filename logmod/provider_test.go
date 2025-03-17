@@ -3,6 +3,7 @@ package logmod_test
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -20,25 +21,28 @@ import (
 
 func TestProvider(t *testing.T) {
 	test := []struct {
-		name        string
-		opts        []logmod.Opt
-		contentType string
-		err         error
+		name         string
+		opts         []logmod.Opt
+		contentType  string
+		expectCalled bool
 	}{
 		{
-			name:        "Default",
-			contentType: "application/x-protobuf",
+			name:         "Defaults",
+			contentType:  "application/x-protobuf",
+			expectCalled: false,
 		},
 		{
-			name:        "WithHTTP",
-			opts:        []logmod.Opt{logmod.WithHTTP()},
-			contentType: "application/x-protobuf",
+			name:         "WithHTTP",
+			opts:         []logmod.Opt{logmod.WithHTTP(), logmod.WithSlog()},
+			contentType:  "application/x-protobuf",
+			expectCalled: true,
 		},
 		{
 			// We dont have proper GRPC server so exporter will retry until it reached OTEL_EXPORTER_OTLP_LOGS_TIMEOUT
-			name:        "WithGRPC",
-			opts:        []logmod.Opt{logmod.WithGRPC()},
-			contentType: "",
+			name:         "WithGRPC",
+			opts:         []logmod.Opt{logmod.WithGRPC(), logmod.WithSlog()},
+			contentType:  "",
+			expectCalled: true,
 		},
 	}
 
@@ -48,6 +52,7 @@ func TestProvider(t *testing.T) {
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				called.Store(true)
 				assert.Equal(t, tt.contentType, r.Header.Get("Content-Type"))
+				io.Copy(io.Discard, r.Body) //nolint: errcheck
 			}))
 			t.Cleanup(srv.Close)
 
@@ -62,10 +67,10 @@ func TestProvider(t *testing.T) {
 			l := otelslog.NewLogger("test")
 			l.Info("test")
 
-			require.ErrorIs(t, p.Stop(), tt.err)
+			require.NoError(t, p.Stop())
 			require.NoError(t, wg.Wait())
 			require.Equal(t, "logmod", p.ID())
-			require.True(t, called.Load())
+			require.Equal(t, tt.expectCalled, called.Load())
 		})
 	}
 }

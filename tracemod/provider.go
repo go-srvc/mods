@@ -2,13 +2,17 @@
 package tracemod
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/trace"
 )
@@ -16,7 +20,7 @@ import (
 const ID = "tracemod"
 
 const (
-	ErrMissingProvider = errStr("meter provider not set")
+	ErrMissingProvider = errStr("trace provider not set")
 	ErrFlushFailed     = errStr("failed to flush remaining spans")
 )
 
@@ -32,8 +36,12 @@ type Provider struct {
 }
 
 // New creates tracer provider module with sane defaults.
+// Default options are: WithEnv.
 func New(opts ...Opt) *Provider {
-	return &Provider{opts: append([]Opt{WithHTTP()}, opts...)}
+	if len(opts) == 0 {
+		opts = []Opt{WithEnv()}
+	}
+	return &Provider{opts: opts}
 }
 
 func (p *Provider) Init() error {
@@ -119,6 +127,38 @@ func WithGRPC() Opt {
 		}
 		p.provider = trace.NewTracerProvider(trace.WithBatcher(exp))
 		return nil
+	}
+}
+
+// WithStdout creates trace provider with stdout exporter.
+func WithStdout(opt ...stdouttrace.Option) Opt {
+	return func(p *Provider) error {
+		exp, err := stdouttrace.New()
+		if err != nil {
+			return fmt.Errorf("failed to create stdout exporter: %w", err)
+		}
+		p.provider = trace.NewTracerProvider(trace.WithBatcher(exp))
+		return nil
+	}
+}
+
+// WithEnv uses OTEL_EXPORTER_OTLP_TRACES_PROTO and OTEL_EXPORTER_OTLP_PROTO environment variable to set exporter.
+// Accepted values are:
+//   - http
+//   - grpc
+//   - stdout
+//
+// If no value is provided, stdout is used.
+func WithEnv() Opt {
+	return func(p *Provider) error {
+		switch strings.ToLower(cmp.Or(os.Getenv("OTEL_EXPORTER_OTLP_TRACES_PROTO"), os.Getenv("OTEL_EXPORTER_OTLP_PROTO"))) {
+		case "http":
+			return WithHTTP()(p)
+		case "grpc":
+			return WithGRPC()(p)
+		default:
+			return WithStdout()(p)
+		}
 	}
 }
 

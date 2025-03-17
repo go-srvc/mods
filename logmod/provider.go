@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
+	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/sdk/log"
 )
@@ -31,13 +33,13 @@ type Provider struct {
 }
 
 // New creates log provider module with sane defaults if no options are provided.
-// By default, it uses HTTP exporter and sets slog's default logger to otelslog logger.
+// Default options are: WithEnv and WithSlog .
 // For instructions on how to integrate log provider with logger of your choice,
 // see the list of ready made bridge libraries:
 // https://opentelemetry.io/ecosystem/registry/?language=go&component=log-bridge
 func New(opts ...Opt) *Provider {
 	if len(opts) == 0 {
-		opts = []Opt{WithHTTP(), WithSlog()}
+		opts = []Opt{WithEnv(), WithSlog()}
 	}
 	return &Provider{opts: opts}
 }
@@ -55,6 +57,7 @@ func (p *Provider) Init() error {
 	}
 
 	global.SetLoggerProvider(p.provider)
+	fmt.Println("init done")
 	return nil
 }
 
@@ -65,7 +68,6 @@ func (p *Provider) Run() error {
 
 func (p *Provider) Stop() error {
 	close(p.done)
-	// Looks like log providers do not return errors on closing but instead log those.
 	flushErr := p.provider.ForceFlush(context.Background())
 	shutdowErr := p.provider.Shutdown(context.Background())
 	return errors.Join(flushErr, shutdowErr)
@@ -117,6 +119,38 @@ func WithGRPC() Opt {
 		}
 		p.provider = log.NewLoggerProvider(log.WithProcessor(log.NewBatchProcessor(exp)))
 		return nil
+	}
+}
+
+// WithStdout creates log provider with stdout exporter.
+func WithStdout(opt ...stdoutlog.Option) Opt {
+	return func(p *Provider) error {
+		exp, err := stdoutlog.New(opt...)
+		if err != nil {
+			return fmt.Errorf("failed to create stdout exporter: %w", err)
+		}
+		p.provider = log.NewLoggerProvider(log.WithProcessor(log.NewBatchProcessor(exp)))
+		return nil
+	}
+}
+
+// WithEnv uses OTEL_EXPORTER_OTLP_TRACES_PROTO and OTEL_EXPORTER_OTLP_PROTO environment variable to set exporter.
+// Accepted values are:
+//   - http
+//   - grpc
+//   - stdout
+//
+// If no value is provided, stdout is used.
+func WithEnv() Opt {
+	return func(p *Provider) error {
+		switch strings.ToLower(cmp.Or(os.Getenv("OTEL_EXPORTER_OTLP_TRACES_PROTO"), os.Getenv("OTEL_EXPORTER_OTLP_PROTO"))) {
+		case "http":
+			return WithHTTP()(p)
+		case "grpc":
+			return WithGRPC()(p)
+		default:
+			return WithStdout()(p)
+		}
 	}
 }
 

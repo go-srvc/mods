@@ -3,6 +3,7 @@ package metermod_test
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -19,26 +20,30 @@ import (
 
 func TestProvider(t *testing.T) {
 	test := []struct {
-		name        string
-		opts        []metermod.Opt
-		contentType string
-		err         error
+		name         string
+		opts         []metermod.Opt
+		contentType  string
+		expectCalled bool
+		err          error
 	}{
 		{
-			name:        "Default",
-			contentType: "application/x-protobuf",
+			name:         "Default",
+			contentType:  "application/x-protobuf",
+			expectCalled: false,
 		},
 		{
-			name:        "WithHTTP",
-			opts:        []metermod.Opt{metermod.WithHTTP()},
-			contentType: "application/x-protobuf",
+			name:         "WithHTTP",
+			opts:         []metermod.Opt{metermod.WithHTTP()},
+			contentType:  "application/x-protobuf",
+			expectCalled: true,
 		},
 		{
 			// We dont have proper GRPC server so exporter will retry until it reached OTEL_EXPORTER_OTLP_METRICS_TIMEOUT
-			name:        "WithGRPC",
-			opts:        []metermod.Opt{metermod.WithGRPC()},
-			contentType: "",
-			err:         metermod.ErrFlushFailed,
+			name:         "WithGRPC",
+			opts:         []metermod.Opt{metermod.WithGRPC()},
+			contentType:  "",
+			expectCalled: true,
+			err:          metermod.ErrFlushFailed,
 		},
 	}
 
@@ -48,6 +53,7 @@ func TestProvider(t *testing.T) {
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				called.Store(true)
 				assert.Equal(t, tt.contentType, r.Header.Get("Content-Type"))
+				io.Copy(io.Discard, r.Body) //nolint: errcheck
 			}))
 			t.Cleanup(srv.Close)
 
@@ -65,7 +71,7 @@ func TestProvider(t *testing.T) {
 			require.ErrorIs(t, p.Stop(), tt.err)
 			require.NoError(t, wg.Wait())
 			require.Equal(t, "metermod", p.ID())
-			require.True(t, called.Load())
+			require.Equal(t, tt.expectCalled, called.Load())
 		})
 	}
 }

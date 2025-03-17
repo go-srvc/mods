@@ -3,6 +3,7 @@ package tracemod_test
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -20,26 +21,30 @@ import (
 
 func TestProvider(t *testing.T) {
 	test := []struct {
-		name        string
-		opts        []tracemod.Opt
-		contentType string
-		err         error
+		name         string
+		opts         []tracemod.Opt
+		contentType  string
+		expectCalled bool
+		err          error
 	}{
 		{
-			name:        "Default",
-			contentType: "application/x-protobuf",
+			name:         "Default",
+			contentType:  "application/x-protobuf",
+			expectCalled: false,
 		},
 		{
-			name:        "WithHTTP",
-			opts:        []tracemod.Opt{tracemod.WithHTTP()},
-			contentType: "application/x-protobuf",
+			name:         "WithHTTP",
+			opts:         []tracemod.Opt{tracemod.WithHTTP()},
+			contentType:  "application/x-protobuf",
+			expectCalled: true,
 		},
 		{
 			// We dont have proper GRPC server so exporter will retry until it reached OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
-			name:        "WithGRPC",
-			opts:        []tracemod.Opt{tracemod.WithGRPC()},
-			contentType: "",
-			err:         tracemod.ErrFlushFailed,
+			name:         "WithGRPC",
+			opts:         []tracemod.Opt{tracemod.WithGRPC()},
+			contentType:  "",
+			expectCalled: true,
+			err:          tracemod.ErrFlushFailed,
 		},
 	}
 
@@ -49,6 +54,7 @@ func TestProvider(t *testing.T) {
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				called.Store(true)
 				assert.Equal(t, tt.contentType, r.Header.Get("Content-Type"))
+				io.Copy(io.Discard, r.Body) //nolint: errcheck
 			}))
 			t.Cleanup(srv.Close)
 
@@ -66,7 +72,7 @@ func TestProvider(t *testing.T) {
 			require.ErrorIs(t, p.Stop(), tt.err)
 			require.NoError(t, wg.Wait())
 			require.Equal(t, "tracemod", p.ID())
-			require.True(t, called.Load())
+			require.Equal(t, tt.expectCalled, called.Load())
 		})
 	}
 }
@@ -99,6 +105,7 @@ func TestProvider_SetsGlobalProvider(t *testing.T) {
 func TestProvider_SetsGlobalPropagator(t *testing.T) {
 	prop := &propagation.TraceContext{}
 	p := tracemod.New(
+		tracemod.WithStdout(),
 		tracemod.WithPropagator(prop),
 	)
 	require.NoError(t, p.Init())

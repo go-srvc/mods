@@ -2,14 +2,18 @@
 package metermod
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
+	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
 	"go.opentelemetry.io/otel/sdk/metric"
 )
 
@@ -31,10 +35,10 @@ type Provider struct {
 }
 
 // New creates meter provider module with sane defaults.
-// Default options are: WithHTTP and WithRuntimeMetrics.
+// Default options are: WithEnv and WithRuntimeMetrics.
 func New(opts ...Opt) *Provider {
 	if len(opts) == 0 {
-		opts = []Opt{WithHTTP(), WithRuntimeMetrics()}
+		opts = []Opt{WithEnv(), WithRuntimeMetrics()}
 	}
 	return &Provider{opts: opts}
 }
@@ -119,6 +123,39 @@ func WithGRPC() Opt {
 	}
 }
 
+// WithStdout creates meter provider with stdout exporter.
+func WithStdout(opt ...stdoutmetric.Option) Opt {
+	return func(p *Provider) error {
+		exp, err := stdoutmetric.New()
+		if err != nil {
+			return fmt.Errorf("failed to create stdout exporter: %w", err)
+		}
+		p.provider = metric.NewMeterProvider(metric.WithReader(metric.NewPeriodicReader(exp)))
+		return nil
+	}
+}
+
+// WithEnv uses OTEL_EXPORTER_OTLP_TRACES_PROTO and OTEL_EXPORTER_OTLP_PROTO environment variable to set exporter.
+// Accepted values are:
+//   - http
+//   - grpc
+//   - stdout
+//
+// If no value is provided, stdout is used.
+func WithEnv() Opt {
+	return func(p *Provider) error {
+		switch strings.ToLower(cmp.Or(os.Getenv("OTEL_EXPORTER_OTLP_TRACES_PROTO"), os.Getenv("OTEL_EXPORTER_OTLP_PROTO"))) {
+		case "http":
+			return WithHTTP()(p)
+		case "grpc":
+			return WithGRPC()(p)
+		default:
+			return WithStdout()(p)
+		}
+	}
+}
+
+// WithRuntimeMetrics starts runtime metrics collection.
 func WithRuntimeMetrics(opts ...runtime.Option) Opt {
 	return func(p *Provider) error {
 		return runtime.Start(opts...)
