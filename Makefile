@@ -5,6 +5,9 @@ MODS_CHECK := ${MOD_NAMES:%=tidy-check/%}
 MODS_TEST  := ${MOD_NAMES:%=test/%}
 MODS_LINT  := ${MOD_NAMES:%=lint/%}
 MODS_TOOLS := ${MOD_NAMES:%=tools/%}
+MODS_TAG   := ${MOD_NAMES:%=.tag/%}
+
+TAG ?=
 
 .PHONY: all
 all: clean tidy-check .WAIT lint test
@@ -53,6 +56,14 @@ tools: ${MODS_TOOLS} ## Update tools
 ${MODS_TOOLS}:
 	cd ./${@F} && go get -tool gotest.tools/gotestsum@latest
 	cd ./${@F} && go get -tool github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+.release: ${MODS_TAG} ## Create a release tags
+	git push --tags
+
+.PHONY: ${MODS_TAG}
+${MODS_TAG}:
+	test -n "${TAG}"
+	git tag ${@F}/${TAG}
 
 .PHONY: clean
 clean: ## Clean files

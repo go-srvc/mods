@@ -21,6 +21,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -62,6 +64,12 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./.output/junit/*.xml
+
+      - name: Release
+        if: ${{ env.IS_RELEASE }}
+        env:
+          TAG: ${{ github.ref }}
+        run: make .release
 
       - uses: actions/cache/save@v4
         if: ${{ env.IS_MAIN }}
