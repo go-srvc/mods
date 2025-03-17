@@ -68,7 +68,7 @@ jobs:
       - name: Release
         if: ${{ env.IS_RELEASE }}
         env:
-          TAG: ${{ github.ref }}
+          TAG: ${{ github.ref_name }}
         run: make .release
 
       - uses: actions/cache/save@v4
