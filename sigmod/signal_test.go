@@ -11,12 +11,29 @@ import (
 )
 
 func TestListener(t *testing.T) {
-	l := sigmod.New(syscall.SIGINT)
-	require.NoError(t, l.Init())
-	require.NoError(t, syscall.Kill(syscall.Getpid(), syscall.SIGINT))
-	require.NoError(t, l.Run())
-	require.NoError(t, l.Stop())
-	require.Equal(t, "sigmod", l.ID())
+	tests := []struct {
+		name    string
+		signals []os.Signal
+	}{
+		{
+			name:    "Defaults",
+			signals: []os.Signal{},
+		},
+		{
+			name:    "Interrupt",
+			signals: []os.Signal{os.Interrupt},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := sigmod.New(tt.signals...)
+			require.NoError(t, l.Init())
+			require.NoError(t, syscall.Kill(syscall.Getpid(), syscall.SIGINT))
+			require.NoError(t, l.Run())
+			require.NoError(t, l.Stop())
+			require.Equal(t, "sigmod", l.ID())
+		})
+	}
 }
 
 func TestStop(t *testing.T) {
