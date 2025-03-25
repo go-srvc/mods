@@ -2,6 +2,7 @@ package sigmod_test
 
 import (
 	"os"
+	"runtime"
 	"syscall"
 	"testing"
 
@@ -12,23 +13,34 @@ import (
 
 func TestListener(t *testing.T) {
 	tests := []struct {
-		name    string
-		signals []os.Signal
+		name     string
+		signals  []os.Signal
+		inputSig syscall.Signal
 	}{
 		{
-			name:    "Defaults",
-			signals: []os.Signal{},
+			name:     "Defaults",
+			signals:  []os.Signal{},
+			inputSig: syscall.SIGINT,
 		},
 		{
-			name:    "Interrupt",
-			signals: []os.Signal{os.Interrupt},
+			name:     "Interrupt",
+			signals:  []os.Signal{os.Interrupt},
+			inputSig: syscall.SIGINT,
+		},
+		{
+			name:     "SIGTERM",
+			signals:  []os.Signal{syscall.SIGTERM},
+			inputSig: syscall.SIGTERM,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := sigmod.New(tt.signals...)
 			require.NoError(t, l.Init())
-			require.NoError(t, syscall.Kill(syscall.Getpid(), syscall.SIGINT))
+			if tt.inputSig == syscall.SIGTERM && runtime.GOOS == "windows" {
+				t.Skip("Windows doesn't support SIGTERM")
+			}
+			require.NoError(t, syscall.Kill(syscall.Getpid(), tt.inputSig))
 			require.NoError(t, l.Run())
 			require.NoError(t, l.Stop())
 			require.Equal(t, "sigmod", l.ID())

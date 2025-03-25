@@ -4,6 +4,7 @@ package sigmod
 import (
 	"os"
 	"os/signal"
+	"syscall"
 )
 
 const ID = "sigmod"
@@ -14,10 +15,13 @@ type Listener struct {
 }
 
 // New creates signal listener for given signals.
-// If no signal is provided, os.Interrupt will be used.
+// If no signal is provided, os.Interrupt and SIGTERM will be used.
 func New(signals ...os.Signal) *Listener {
 	if len(signals) == 0 {
-		signals = []os.Signal{os.Interrupt}
+		signals = []os.Signal{
+			os.Interrupt,
+			syscall.SIGTERM, // XXX Not available on Windows
+		}
 	}
 	return &Listener{
 		sigs: signals,
