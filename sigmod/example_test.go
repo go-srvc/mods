@@ -10,10 +10,12 @@ import (
 )
 
 func ExampleNew() {
+	//nolint: errcheck
 	go func() {
 		// Send SIGINT after 1 second.
 		time.Sleep(time.Second)
-		syscall.Kill(syscall.Getpid(), syscall.SIGINT) //nolint: errcheck
+		p, _ := os.FindProcess(syscall.Getegid())
+		p.Signal(os.Interrupt)
 	}()
 
 	srvc.RunAndExit(

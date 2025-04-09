@@ -17,7 +17,7 @@ type Listener struct {
 // If no signal is provided, os.Interrupt will be used.
 func New(signals ...os.Signal) *Listener {
 	if len(signals) == 0 {
-		signals = []os.Signal{os.Interrupt}
+		signals = defaultSignals
 	}
 	return &Listener{
 		sigs: signals,
