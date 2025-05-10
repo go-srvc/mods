@@ -1,7 +1,6 @@
 package sigmod_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/go-srvc/mods/sigmod"
@@ -10,7 +9,7 @@ import (
 )
 
 func TestStop(t *testing.T) {
-	l := sigmod.New(os.Interrupt)
+	l := sigmod.New()
 	require.NoError(t, l.Init())
 
 	wg := &errgroup.ErrGroup{}

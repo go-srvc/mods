@@ -4,4 +4,4 @@ package sigmod
 
 import "os"
 
-var defaultSignals = []os.Signal{os.Kill}
+var DefaultSignals = []os.Signal{os.Kill}
