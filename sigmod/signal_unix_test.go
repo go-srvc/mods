@@ -12,14 +12,18 @@ import (
 )
 
 func TestListenerDefaultSignal(t *testing.T) {
-	// Decoupled from sigmod.defaultSignals to detect breaking changes.
-	testSignals := []syscall.Signal{syscall.SIGINT}
-
-	for _, sig := range testSignals {
+	for _, sig := range sigmod.DefaultSignals {
 		t.Run(sig.String(), func(t *testing.T) {
+			var ok bool
+			var s syscall.Signal
+			if s, ok = sig.(syscall.Signal); !ok {
+				t.Errorf("Couldn't convert signal %s to syscall", sig.String())
+				return
+			}
+
 			l := sigmod.New()
 			require.NoError(t, l.Init())
-			require.NoError(t, syscall.Kill(syscall.Getpid(), sig))
+			require.NoError(t, syscall.Kill(syscall.Getpid(), s))
 			require.NoError(t, l.Stop())
 			require.Equal(t, "sigmod", l.ID())
 		})
