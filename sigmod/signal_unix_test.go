@@ -12,8 +12,10 @@ import (
 )
 
 func TestListenerDefaultSignal(t *testing.T) {
-	// Decoupled from sigmod.defaultSignals to detect breaking changes.
-	testSignals := []syscall.Signal{syscall.SIGINT}
+	testSignals := []syscall.Signal{
+		syscall.SIGINT,
+		syscall.SIGTERM,
+	}
 
 	for _, sig := range testSignals {
 		t.Run(sig.String(), func(t *testing.T) {

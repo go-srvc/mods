@@ -2,6 +2,12 @@
 
 package sigmod
 
-import "os"
+import (
+	"os"
+	"syscall"
+)
 
-var defaultSignals = []os.Signal{os.Interrupt}
+var defaultSignals = []os.Signal{
+	os.Interrupt,
+	syscall.SIGTERM,
+}
