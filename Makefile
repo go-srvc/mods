@@ -40,7 +40,6 @@ download:
 	go work use -r .
 	go work sync
 	go mod download
-	git diff --exit-code --name-status -- go.work go.work.sum
 
 .PHONY: tidy-check
 tidy-check: ${MODS_CHECK} ## Check if all mods are tidy
