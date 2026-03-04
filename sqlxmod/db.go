@@ -112,7 +112,7 @@ func WithOtel(driver, dsn string, opts ...otelsql.Option) Opt {
 			return err
 		}
 
-		err = otelsql.RegisterDBStatsMetrics(db, opts...)
+		_, err = otelsql.RegisterDBStatsMetrics(db, opts...)
 		if err != nil {
 			return err
 		}
