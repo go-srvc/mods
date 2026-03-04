@@ -1,6 +1,66 @@
 version: 2
 updates:
   - package-ecosystem: "gomod"
-    directory: "/"
+    directory: "/httpmod"
     schedule:
       interval: "daily"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/logmod"
+    schedule:
+      interval: "daily"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/metermod"
+    schedule:
+      interval: "daily"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/sigmod"
+    schedule:
+      interval: "daily"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/sqlmod"
+    schedule:
+      interval: "daily"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/sqlxmod"
+    schedule:
+      interval: "daily"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/tickermod"
+    schedule:
+      interval: "daily"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/tracermod"
+    schedule:
+      interval: "daily"
+    groups:
+      all:
+        patterns:
+          - "*"
