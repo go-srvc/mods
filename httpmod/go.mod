@@ -8,9 +8,9 @@ tool (
 )
 
 require (
-	github.com/go-srvc/srvc v0.0.1
+	github.com/go-srvc/srvc v0.2.0
 	github.com/heppu/errgroup v1.0.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 )
 
 require (
