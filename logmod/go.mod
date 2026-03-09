@@ -11,12 +11,12 @@ require (
 	github.com/go-srvc/srvc v0.2.0
 	github.com/heppu/errgroup v1.0.0
 	github.com/stretchr/testify v1.11.1
-	go.opentelemetry.io/contrib/bridges/otelslog v0.16.0
-	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.17.0
-	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.17.0
-	go.opentelemetry.io/otel/exporters/stdout/stdoutlog v0.17.0
-	go.opentelemetry.io/otel/log v0.17.0
-	go.opentelemetry.io/otel/sdk/log v0.17.0
+	go.opentelemetry.io/contrib/bridges/otelslog v0.17.0
+	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.18.0
+	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.18.0
+	go.opentelemetry.io/otel/exporters/stdout/stdoutlog v0.18.0
+	go.opentelemetry.io/otel/log v0.18.0
+	go.opentelemetry.io/otel/sdk/log v0.18.0
 )
 
 require (
@@ -196,10 +196,10 @@ require (
 	go-simpler.org/musttag v0.13.0 // indirect
 	go-simpler.org/sloglint v0.9.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/otel v1.41.0 // indirect
-	go.opentelemetry.io/otel/metric v1.41.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.41.0 // indirect
-	go.opentelemetry.io/otel/trace v1.41.0 // indirect
+	go.opentelemetry.io/otel v1.42.0 // indirect
+	go.opentelemetry.io/otel/metric v1.42.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.42.0 // indirect
+	go.opentelemetry.io/otel/trace v1.42.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.9.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
@@ -217,7 +217,7 @@ require (
 	golang.org/x/tools/go/packages/packagestest v0.1.1-deprecated // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260226221140-a57be14db171 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 // indirect
-	google.golang.org/grpc v1.79.1 // indirect
+	google.golang.org/grpc v1.79.2 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
