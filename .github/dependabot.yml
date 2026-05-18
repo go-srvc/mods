@@ -57,7 +57,7 @@ updates:
         patterns:
           - "*"
   - package-ecosystem: "gomod"
-    directory: "/tracermod"
+    directory: "/tracemod"
     schedule:
       interval: "daily"
     groups:
