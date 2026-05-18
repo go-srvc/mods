@@ -1,11 +1,12 @@
-MOD_PATHS  := $(wildcard ./*mod/)
-MOD_NAMES  := ${MOD_PATHS:./%/=%}
-MODS_TIDY  := ${MOD_NAMES:%=tidy/%}
-MODS_CHECK := ${MOD_NAMES:%=tidy-check/%}
-MODS_TEST  := ${MOD_NAMES:%=test/%}
-MODS_LINT  := ${MOD_NAMES:%=lint/%}
-MODS_TOOLS := ${MOD_NAMES:%=tools/%}
-MODS_TAG   := ${MOD_NAMES:%=.tag/%}
+MOD_PATHS   := $(wildcard ./*mod/)
+MOD_NAMES   := ${MOD_PATHS:./%/=%}
+MODS_TIDY   := ${MOD_NAMES:%=tidy/%}
+MODS_CHECK  := ${MOD_NAMES:%=tidy-check/%}
+MODS_TEST   := ${MOD_NAMES:%=test/%}
+MODS_LINT   := ${MOD_NAMES:%=lint/%}
+MODS_TOOLS  := ${MOD_NAMES:%=tools/%}
+MODS_TAG    := ${MOD_NAMES:%=.tag/%}
+MODS_UPDATE := ${MOD_NAMES:%=update-deps/%}
 
 TAG ?=
 
@@ -18,7 +19,7 @@ lint: ${MODS_LINT} ## Run linter
 
 .PHONY: ${MODS_LINT}
 ${MODS_LINT}:
-	go tool github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=15m ./${@F}/...
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --timeout=15m ./${@F}/...
 
 .PHONY: test
 test: ${MODS_TEST} ## Run tests
@@ -48,13 +49,21 @@ ${MODS_CHECK}:
 	cd ./${@F} && go mod tidy
 	git diff --exit-code --name-status -- ./${@F}/go.mod ./${@F}/go.sum
 
+.PHONY: update-deps
+update-deps: ${MODS_UPDATE} ## Update all deps
+.PHONY: ${MODS_UPDATE}
+${MODS_UPDATE}:
+	cd ./${@F} && go get -u -t ./...
+	cd ./${@F} && go get -u tool
+	cd ./${@F} && go mod tidy
+
 .PHONY: tools
 tools: ${MODS_TOOLS} ## Update tools
 
 .PHONY: ${MODS_TOOLS}
 ${MODS_TOOLS}:
 	cd ./${@F} && go get -tool gotest.tools/gotestsum@latest
-	cd ./${@F} && go get -tool github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	cd ./${@F} && go get -tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 
 .release: ${MODS_TAG} ## Create a release tags
 	git push --tags
