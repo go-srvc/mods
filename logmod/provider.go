@@ -1,4 +1,4 @@
-// Package logmod provides OpenTelemetry trace provider as a module.
+// Package logmod provides OpenTelemetry log provider as a module.
 package logmod
 
 import (
