@@ -21,9 +21,10 @@ func main() {
 		logmod.New(),
 		tickermod.New(
 			tickermod.WithInterval(5*time.Second),
-			tickermod.WithFunc(func() {
-				// Slog uses now otelslog bridge configured by logmod.
+			tickermod.WithFunc(func() error {
+				// slog routes through the otelslog bridge configured by logmod.
 				slog.Info("Hello, World!")
+				return nil
 			}),
 		),
 	)

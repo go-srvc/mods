@@ -2,6 +2,8 @@
 
 # sigmod
 
+sigmod listens for OS signals and returns from Run when one is received, triggering srvc shutdown.
+
 ```go
 package main
 

@@ -2,6 +2,8 @@
 
 # httpmod
 
+httpmod runs an `http.Server` as a srvc module and shuts it down gracefully on exit.
+
 ```go
 package main
 

@@ -60,12 +60,12 @@ func (d *DB) Stop() error {
 
 func (d *DB) ID() string { return ID }
 
-// DB returns *sqlx.DB instance.
-// This should be only call after Init.
+// DB returns the underlying *sqlx.DB. Only valid after Init has run.
 func (d *DB) DB() *sqlx.DB { return d.dbx }
 
 type Opt func(*DB) error
 
+// WithDSN opens a *sqlx.DB from the given driver name and DSN.
 func WithDSN(driver, dsn string) Opt {
 	return func(d *DB) error {
 		dbx, err := sqlx.Open(driver, dsn)

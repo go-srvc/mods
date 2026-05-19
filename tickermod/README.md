@@ -2,6 +2,8 @@
 
 # tickermod
 
+tickermod runs a function on a fixed interval. The ticker stops when the function returns a non-nil error.
+
 ```go
 package main
 
@@ -17,8 +19,9 @@ func main() {
 	srvc.RunAndExit(
 		tickermod.New(
 			tickermod.WithInterval(5*time.Second),
-			tickermod.WithFunc(func() {
+			tickermod.WithFunc(func() error {
 				slog.Info("Hello, World!")
+				return nil
 			}),
 		),
 	)
