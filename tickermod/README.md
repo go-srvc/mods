@@ -9,18 +9,23 @@ package main
 
 import (
 	"log/slog"
+	"os"
 	"time"
 
+	"github.com/go-srvc/mods/logmod"
+	"github.com/go-srvc/mods/sigmod"
 	"github.com/go-srvc/mods/tickermod"
 	"github.com/go-srvc/srvc"
 )
 
 func main() {
 	srvc.RunAndExit(
+		logmod.New(),
+		sigmod.New(os.Interrupt),
 		tickermod.New(
 			tickermod.WithInterval(5*time.Second),
 			tickermod.WithFunc(func() error {
-				slog.Info("Hello, World!")
+				slog.Info("tick")
 				return nil
 			}),
 		),
