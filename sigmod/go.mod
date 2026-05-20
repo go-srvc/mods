@@ -1,6 +1,6 @@
 module github.com/go-srvc/mods/sigmod
 
-go 1.26.0
+go 1.26.3
 
 tool (
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
@@ -8,7 +8,7 @@ tool (
 )
 
 require (
-	github.com/go-srvc/srvc v0.2.0
+	github.com/go-srvc/srvc v1.0.0
 	github.com/heppu/errgroup v1.0.0
 	github.com/stretchr/testify v1.11.1
 )
