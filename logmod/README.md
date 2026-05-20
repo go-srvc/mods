@@ -2,31 +2,36 @@
 
 # logmod
 
-Using logmod takes care of exporting logs to otel endpoint and flushing log buffers before the application exits.
+logmod exports logs to the otel endpoint and flushes log buffers before the application exits. After `logmod.New()` runs, `slog` calls are routed through the otelslog bridge.
 
 ```go
 package main
 
 import (
+	"fmt"
 	"log/slog"
-	"time"
+	"net/http"
+	"os"
 
+	"github.com/go-srvc/mods/httpmod"
 	"github.com/go-srvc/mods/logmod"
-	"github.com/go-srvc/mods/tickermod"
+	"github.com/go-srvc/mods/sigmod"
 	"github.com/go-srvc/srvc"
 )
 
 func main() {
 	srvc.RunAndExit(
 		logmod.New(),
-		tickermod.New(
-			tickermod.WithInterval(5*time.Second),
-			tickermod.WithFunc(func() error {
-				// slog routes through the otelslog bridge configured by logmod.
-				slog.Info("Hello, World!")
-				return nil
-			}),
+		sigmod.New(os.Interrupt),
+		httpmod.New(
+			httpmod.WithAddr(":8080"),
+			httpmod.WithHandler(http.HandlerFunc(hello)),
 		),
 	)
+}
+
+func hello(w http.ResponseWriter, r *http.Request) {
+	slog.InfoContext(r.Context(), "request", "path", r.URL.Path)
+	fmt.Fprint(w, "ok")
 }
 ```

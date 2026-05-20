@@ -8,37 +8,26 @@ httpmod runs an `http.Server` as a srvc module and shuts it down gracefully on e
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
 
 	"github.com/go-srvc/mods/httpmod"
+	"github.com/go-srvc/mods/sigmod"
 	"github.com/go-srvc/srvc"
 )
 
 func main() {
 	srvc.RunAndExit(
+		sigmod.New(os.Interrupt),
 		httpmod.New(
-			httpmod.WithServerFn(CreateServer),
+			httpmod.WithAddr(":8080"),
+			httpmod.WithHandler(http.HandlerFunc(hello)),
 		),
 	)
 }
 
-func CreateServer() (*http.Server, error) {
-	addr := os.Getenv("ADDR")
-	if addr == "" {
-		return nil, errors.New("ADDR is required")
-	}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "World!")
-	})
-
-	return &http.Server{
-		Addr:    addr,
-		Handler: mux,
-	}, nil
+func hello(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "hello, world")
 }
 ```

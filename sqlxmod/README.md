@@ -2,16 +2,19 @@
 
 # sqlxmod
 
-sqlxmod wraps [jmoiron/sqlx](https://github.com/jmoiron/sqlx) and takes care of gracefully closing connection pool when application exits.
+sqlxmod wraps [jmoiron/sqlx](https://github.com/jmoiron/sqlx) as a module and closes the connection pool gracefully when the application exits.
 
 ```go
 package main
 
 import (
-	"context"
+	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/XSAM/otelsql"
+	"github.com/go-srvc/mods/httpmod"
+	"github.com/go-srvc/mods/sigmod"
 	"github.com/go-srvc/mods/sqlxmod"
 	"github.com/go-srvc/srvc"
 	semconv "go.opentelemetry.io/otel/semconv/v1.30.0"
@@ -20,26 +23,29 @@ import (
 )
 
 func main() {
-	srvc.RunAndExit(
-		New(),
-	)
-}
-
-// Store embeds the sqlxmod.DB
-type Store struct {
-	*sqlxmod.DB
-}
-
-func New() *Store {
 	db := sqlxmod.New(
 		sqlxmod.WithOtel("pgx", os.Getenv("DSN"),
 			otelsql.WithAttributes(semconv.DBSystemNamePostgreSQL),
 		),
 	)
-	return &Store{DB: db}
+	srvc.RunAndExit(
+		sigmod.New(os.Interrupt),
+		db,
+		httpmod.New(
+			httpmod.WithAddr(":8080"),
+			httpmod.WithHandler(handler(db)),
+		),
+	)
 }
 
-func (s *Store) Healthy(ctx context.Context) error {
-	return s.DB.DB().PingContext(ctx)
+func handler(db *sqlxmod.DB) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var version string
+		if err := db.DB().GetContext(r.Context(), &version, "SELECT version()"); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprintf(w, "db version: %s\n", version)
+	})
 }
 ```
