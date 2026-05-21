@@ -9,73 +9,105 @@ on:
   push:
     branches:
       - main
-  release:
-    types:
-      - published
 
-env:
-  IS_PR: ${{github.event_name == 'pull_request' || ''}}
-  IS_MAIN: ${{github.event_name == 'push' || ''}}
-  IS_RELEASE: ${{github.event_name == 'release' || ''}}
+permissions:
+  contents: read
 
 jobs:
-  build:
+  discover:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    outputs:
+      mods: ${{ steps.changed.outputs.mods }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - id: changed
+        run: |
+          changed=()
+          for m in *mod; do
+            last=$(git tag --list "$m/v*" | sort -V | tail -1)
+            if [ -z "$last" ] || ! git diff --quiet "$last"..HEAD -- "$m/"; then
+              changed+=("$m")
+            fi
+          done
+          echo "mods=$(printf '%s\n' "${changed[@]}" | jq -R . | jq -s -c .)" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: discover
+    if: ${{ needs.discover.outputs.mods != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mod: ${{ fromJSON(needs.discover.outputs.mods) }}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/cache/restore@v4
-        with:
-          key: ${{ runner.os }}-go-cache-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
-          path: |
-            ~/.cache/golangci-lint
-            ~/.cache/go-build
-            ~/go/pkg/mod
-
       - uses: actions/setup-go@v5
         with:
-          go-version-file: ./go.work
-          cache: false
+          go-version-file: ./${{ matrix.mod }}/go.mod
+          cache-dependency-path: ./${{ matrix.mod }}/go.sum
 
-      - name: Download deps
-        run: make download
-
-      - name: Check mod files
-        run: make -j2 tidy-check
+      - name: Tidy check
+        run: make tidy-check/${{ matrix.mod }}
 
       - name: Lint
-        run: make lint # or golangci-lint doesn't like parallel runs, hence no -j flag.
+        run: make lint/${{ matrix.mod }}
+
+      - name: API check
+        run: make api-check/${{ matrix.mod }}
 
       - name: Test
-        run: make -j2 test
+        run: make test/${{ matrix.mod }}
 
-      - name: Upload results to Codecov
+      - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./.output/coverage/*.txt
+          files: ./.output/coverage/${{ matrix.mod }}.txt
+          flags: ${{ matrix.mod }}
 
-      - name: Upload test results to Codecov
+      - name: Upload test results
         if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./.output/junit/*.xml
+          files: ./.output/junit/${{ matrix.mod }}.xml
+          flags: ${{ matrix.mod }}
 
-      - name: Release
-        if: ${{ env.IS_RELEASE }}
-        env:
-          TAG: ${{ github.ref_name }}
-        run: make .release
-
-      - uses: actions/cache/save@v4
-        if: ${{ env.IS_MAIN }}
+  tag:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.discover.outputs.mods != '[]' }}
+    needs:
+      - discover
+      - test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        mod: ${{ fromJSON(needs.discover.outputs.mods) }}
+    steps:
+      - uses: actions/checkout@v4
         with:
-          key: ${{ runner.os }}-go-cache-${{ hashFiles('**/go.sum') }}
-          path: |
-            ~/.cache/golangci-lint
-            ~/.cache/go-build
-            ~/go/pkg/mod
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ./${{ matrix.mod }}/go.mod
+          cache-dependency-path: ./${{ matrix.mod }}/go.sum
+
+      - name: Tag
+        run: make tag/${{ matrix.mod }}
+
+      - name: Push tag and create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=$(git tag --points-at HEAD --list '${{ matrix.mod }}/v*' | head -1)
+          [ -z "$tag" ] && exit 0
+          git push origin "$tag"
+          gh release create "$tag" --title "$tag" --generate-notes

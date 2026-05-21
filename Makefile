@@ -1,14 +1,17 @@
-MOD_PATHS   := $(wildcard ./*mod/)
-MOD_NAMES   := ${MOD_PATHS:./%/=%}
-MODS_TIDY   := ${MOD_NAMES:%=tidy/%}
-MODS_CHECK  := ${MOD_NAMES:%=tidy-check/%}
-MODS_TEST   := ${MOD_NAMES:%=test/%}
-MODS_LINT   := ${MOD_NAMES:%=lint/%}
-MODS_TOOLS  := ${MOD_NAMES:%=tools/%}
-MODS_TAG    := ${MOD_NAMES:%=.tag/%}
-MODS_UPDATE := ${MOD_NAMES:%=update-deps/%}
+MOD_PATHS     := $(wildcard ./*mod/)
+MOD_NAMES     := ${MOD_PATHS:./%/=%}
+MODS_TIDY     := ${MOD_NAMES:%=tidy/%}
+MODS_CHECK    := ${MOD_NAMES:%=tidy-check/%}
+MODS_TEST     := ${MOD_NAMES:%=test/%}
+MODS_LINT     := ${MOD_NAMES:%=lint/%}
+MODS_TOOLS    := ${MOD_NAMES:%=tools/%}
+MODS_UPDATE   := ${MOD_NAMES:%=update-deps/%}
+MODS_DOWNLOAD := ${MOD_NAMES:%=download/%}
+MODS_APICHECK := ${MOD_NAMES:%=api-check/%}
+MODS_TAG      := ${MOD_NAMES:%=tag/%}
 
-TAG ?=
+REMOTE        ?= origin
+mod_last_tag   = $(shell git ls-remote --tags --refs ${REMOTE} '$(1)/v*' | sed 's|.*refs/tags/||' | sort -V | tail -1)
 
 .PHONY: all
 all: clean tidy-check .WAIT lint test
@@ -19,7 +22,7 @@ lint: ${MODS_LINT} ## Run linter
 
 .PHONY: ${MODS_LINT}
 ${MODS_LINT}:
-	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --timeout=15m ./${@F}/...
+	cd ./${@F} && go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --timeout=15m ./...
 
 .PHONY: test
 test: ${MODS_TEST} ## Run tests
@@ -27,7 +30,7 @@ test: ${MODS_TEST} ## Run tests
 .PHONY: ${MODS_TEST}
 ${MODS_TEST}:
 	mkdir -p .output/coverage .output/junit
-	go tool gotest.tools/gotestsum --junitfile=.output/junit/${@F}.xml -- -race -covermode=atomic -coverprofile=.output/coverage/${@F}.txt ./${@F}/...
+	cd ./${@F} && go tool gotest.tools/gotestsum --junitfile=../.output/junit/${@F}.xml -- -race -covermode=atomic -coverprofile=../.output/coverage/${@F}.txt ./...
 
 .PHONY:tidy ## Tidy all mods
 tidy: ${MODS_TIDY}
@@ -36,11 +39,12 @@ tidy: ${MODS_TIDY}
 ${MODS_TIDY}:
 	cd ./${@F} && go mod tidy
 
-.PHONY:download ## Download deps for all mods
-download:
-	go work use -r .
-	go work sync
-	go mod download
+.PHONY: download ## Download deps for all mods
+download: ${MODS_DOWNLOAD}
+
+.PHONY: ${MODS_DOWNLOAD}
+${MODS_DOWNLOAD}:
+	cd ./${@F} && go mod download
 
 .PHONY: tidy-check
 tidy-check: ${MODS_CHECK} ## Check if all mods are tidy
@@ -57,21 +61,29 @@ ${MODS_UPDATE}:
 	cd ./${@F} && go get -u tool
 	cd ./${@F} && go mod tidy
 
-.PHONY: tools
-tools: ${MODS_TOOLS} ## Update tools
+.PHONY: api-check
+api-check: ${MODS_APICHECK} ## Fail on breaking API changes vs the latest tag
 
-.PHONY: ${MODS_TOOLS}
-${MODS_TOOLS}:
-	cd ./${@F} && go get -tool gotest.tools/gotestsum@latest
-	cd ./${@F} && go get -tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+.PHONY: ${MODS_APICHECK}
+${MODS_APICHECK}: MOD  = ${@F}
+${MODS_APICHECK}: LAST = $(call mod_last_tag,${MOD})
+${MODS_APICHECK}: BASE = $(if $(LAST),$(LAST:$(MOD)/%=%),none -version=v1.0.0)
+${MODS_APICHECK}:
+	cd ${MOD} && go run golang.org/x/exp/cmd/gorelease@latest -base=${BASE}
 
-.release: ${MODS_TAG} ## Create a release tags
-	git push --tags
+.PHONY: tag
+tag: ${MODS_TAG} ## Tag any mod that has changes since its last tag
 
 .PHONY: ${MODS_TAG}
+${MODS_TAG}: MOD  = ${@F}
+${MODS_TAG}: LAST = $(call mod_last_tag,${MOD})
+${MODS_TAG}: BASE = $(LAST:$(MOD)/%=%)
 ${MODS_TAG}:
-	test -n "${TAG}"
-	git tag ${@F}/${TAG}
+	@v="v1.0.0"; if [ -n "${LAST}" ]; then \
+	  v=$$(cd ${MOD} && go run golang.org/x/exp/cmd/gorelease@latest -base=${BASE} | tee /dev/stderr | awk '/^Suggested version:/ {print $$3; exit}'); \
+	  test -n "$$v" || { echo "${MOD}: gorelease did not suggest a version" >&2; exit 1; }; \
+	fi; \
+	git tag "${MOD}/$$v" && echo "tagged ${MOD}/$$v"
 
 .PHONY: clean
 clean: ## Clean files
