@@ -4,7 +4,6 @@ MODS_TIDY     := ${MOD_NAMES:%=tidy/%}
 MODS_CHECK    := ${MOD_NAMES:%=tidy-check/%}
 MODS_TEST     := ${MOD_NAMES:%=test/%}
 MODS_LINT     := ${MOD_NAMES:%=lint/%}
-MODS_TOOLS    := ${MOD_NAMES:%=tools/%}
 MODS_UPDATE   := ${MOD_NAMES:%=update-deps/%}
 MODS_DOWNLOAD := ${MOD_NAMES:%=download/%}
 MODS_APICHECK := ${MOD_NAMES:%=api-check/%}
@@ -56,7 +55,10 @@ ${MODS_CHECK}:
 .PHONY: update-deps
 update-deps: ${MODS_UPDATE} ## Update all deps
 .PHONY: ${MODS_UPDATE}
+GO_VERSION    ?= $(shell go env GOVERSION | sed 's/^go//')
+
 ${MODS_UPDATE}:
+	cd ./${@F} && go mod edit -go=${GO_VERSION}
 	cd ./${@F} && go get -u -t ./...
 	cd ./${@F} && go get -u tool
 	cd ./${@F} && go mod tidy
@@ -69,7 +71,7 @@ ${MODS_APICHECK}: MOD  = ${@F}
 ${MODS_APICHECK}: LAST = $(call mod_last_tag,${MOD})
 ${MODS_APICHECK}: BASE = $(if $(LAST),$(LAST:$(MOD)/%=%),none -version=v1.0.0)
 ${MODS_APICHECK}:
-	cd ${MOD} && go run golang.org/x/exp/cmd/gorelease@latest -base=${BASE}
+	cd ${MOD} && go tool gorelease -base=${BASE}
 
 .PHONY: tag
 tag: ${MODS_TAG} ## Tag any mod that has changes since its last tag
@@ -80,7 +82,7 @@ ${MODS_TAG}: LAST = $(call mod_last_tag,${MOD})
 ${MODS_TAG}: BASE = $(LAST:$(MOD)/%=%)
 ${MODS_TAG}:
 	@v="v1.0.0"; if [ -n "${LAST}" ]; then \
-	  v=$$(cd ${MOD} && go run golang.org/x/exp/cmd/gorelease@latest -base=${BASE} | tee /dev/stderr | awk '/^Suggested version:/ {print $$3; exit}'); \
+	  v=$$(cd ${MOD} && go tool gorelease -base=${BASE} | tee /dev/stderr | awk '/^Suggested version:/ {print $$3; exit}'); \
 	  test -n "$$v" || { echo "${MOD}: gorelease did not suggest a version" >&2; exit 1; }; \
 	fi; \
 	git tag "${MOD}/$$v" && echo "tagged ${MOD}/$$v"
