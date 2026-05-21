@@ -4,7 +4,6 @@ MODS_TIDY     := ${MOD_NAMES:%=tidy/%}
 MODS_CHECK    := ${MOD_NAMES:%=tidy-check/%}
 MODS_TEST     := ${MOD_NAMES:%=test/%}
 MODS_LINT     := ${MOD_NAMES:%=lint/%}
-MODS_TOOLS    := ${MOD_NAMES:%=tools/%}
 MODS_UPDATE   := ${MOD_NAMES:%=update-deps/%}
 MODS_DOWNLOAD := ${MOD_NAMES:%=download/%}
 MODS_APICHECK := ${MOD_NAMES:%=api-check/%}
@@ -52,15 +51,6 @@ tidy-check: ${MODS_CHECK} ## Check if all mods are tidy
 ${MODS_CHECK}:
 	cd ./${@F} && go mod tidy
 	git diff --exit-code --name-status -- ./${@F}/go.mod ./${@F}/go.sum
-
-.PHONY: tools
-tools: ${MODS_TOOLS} ## Pin shared tools into each mod's go.mod
-
-.PHONY: ${MODS_TOOLS}
-${MODS_TOOLS}:
-	cd ./${@F} && go get -tool gotest.tools/gotestsum@latest
-	cd ./${@F} && go get -tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
-	cd ./${@F} && go get -tool golang.org/x/exp/cmd/gorelease@latest
 
 .PHONY: update-deps
 update-deps: ${MODS_UPDATE} ## Update all deps
