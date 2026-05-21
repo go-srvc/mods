@@ -15,12 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - id: go
+        run: echo "version=$(curl -fsSL 'https://go.dev/dl/?mode=json' | jq -r '[.[] | select(.stable)] | .[0].version | sub("^go"; "")')" >> "$GITHUB_OUTPUT"
+
       - uses: actions/setup-go@v5
         with:
-          go-version: stable
+          go-version: ${{ steps.go.outputs.version }}
 
       - name: Update Go, tools, and deps
-        run: make update-deps
+        run: make update-deps GO_VERSION=${{ steps.go.outputs.version }}
 
       - name: Open PR if changes
         env:
