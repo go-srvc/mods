@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.BOT_TOKEN }}
 
       - id: go
         run: echo "version=$(curl -fsSL 'https://go.dev/dl/?mode=json' | jq -r '[.[] | select(.stable)] | .[0].version | sub("^go"; "")')" >> "$GITHUB_OUTPUT"
@@ -27,7 +29,7 @@ jobs:
 
       - name: Open PR if changes
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           if git diff --quiet; then
             echo "no changes"
