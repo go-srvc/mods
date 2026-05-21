@@ -1,6 +1,6 @@
 module github.com/go-srvc/mods/sqlmod
 
-go 1.26.0
+go 1.26.3
 
 tool (
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
@@ -9,7 +9,7 @@ tool (
 
 require (
 	github.com/XSAM/otelsql v0.42.0
-	github.com/go-srvc/srvc v0.2.0
+	github.com/go-srvc/srvc v1.0.0
 	github.com/lib/pq v1.12.3
 	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/otel v1.43.0
