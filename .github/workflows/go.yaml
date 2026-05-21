@@ -116,8 +116,8 @@ jobs:
         run: |
           tag=$(git tag --points-at HEAD --list '${{ matrix.mod }}/v*' | head -1)
           [ -z "$tag" ] && exit 0
-          git push origin "$tag"
-          gh release create "$tag" --title "$tag" --generate-notes
+          git ls-remote --exit-code origin "refs/tags/$tag" >/dev/null 2>&1 || git push origin "$tag"
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --title "$tag" --generate-notes
 
   ci:
     needs:
