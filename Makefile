@@ -53,6 +53,15 @@ ${MODS_CHECK}:
 	cd ./${@F} && go mod tidy
 	git diff --exit-code --name-status -- ./${@F}/go.mod ./${@F}/go.sum
 
+.PHONY: tools
+tools: ${MODS_TOOLS} ## Pin shared tools into each mod's go.mod
+
+.PHONY: ${MODS_TOOLS}
+${MODS_TOOLS}:
+	cd ./${@F} && go get -tool gotest.tools/gotestsum@latest
+	cd ./${@F} && go get -tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+	cd ./${@F} && go get -tool golang.org/x/exp/cmd/gorelease@latest
+
 .PHONY: update-deps
 update-deps: ${MODS_UPDATE} ## Update all deps
 .PHONY: ${MODS_UPDATE}
@@ -70,7 +79,7 @@ ${MODS_APICHECK}: MOD  = ${@F}
 ${MODS_APICHECK}: LAST = $(call mod_last_tag,${MOD})
 ${MODS_APICHECK}: BASE = $(if $(LAST),$(LAST:$(MOD)/%=%),none -version=v1.0.0)
 ${MODS_APICHECK}:
-	cd ${MOD} && go run golang.org/x/exp/cmd/gorelease@latest -base=${BASE}
+	cd ${MOD} && go tool gorelease -base=${BASE}
 
 .PHONY: tag
 tag: ${MODS_TAG} ## Tag any mod that has changes since its last tag
@@ -81,7 +90,7 @@ ${MODS_TAG}: LAST = $(call mod_last_tag,${MOD})
 ${MODS_TAG}: BASE = $(LAST:$(MOD)/%=%)
 ${MODS_TAG}:
 	@v="v1.0.0"; if [ -n "${LAST}" ]; then \
-	  v=$$(cd ${MOD} && go run golang.org/x/exp/cmd/gorelease@latest -base=${BASE} | tee /dev/stderr | awk '/^Suggested version:/ {print $$3; exit}'); \
+	  v=$$(cd ${MOD} && go tool gorelease -base=${BASE} | tee /dev/stderr | awk '/^Suggested version:/ {print $$3; exit}'); \
 	  test -n "$$v" || { echo "${MOD}: gorelease did not suggest a version" >&2; exit 1; }; \
 	fi; \
 	git tag "${MOD}/$$v" && echo "tagged ${MOD}/$$v"
