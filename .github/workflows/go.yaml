@@ -17,12 +17,16 @@ jobs:
   discover:
     runs-on: ubuntu-latest
     outputs:
-      mods: ${{ steps.changed.outputs.mods }}
+      mods: ${{ steps.list.outputs.mods }}
+      changed: ${{ steps.changed.outputs.mods }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
+
+      - id: list
+        run: echo "mods=$(ls -d *mod | jq -R . | jq -s -c .)" >> "$GITHUB_OUTPUT"
 
       - id: changed
         run: |
@@ -33,11 +37,14 @@ jobs:
               changed+=("$m")
             fi
           done
-          echo "mods=$(printf '%s\n' "${changed[@]}" | jq -R . | jq -s -c .)" >> "$GITHUB_OUTPUT"
+          if [ ${#changed[@]} -eq 0 ]; then
+            echo "mods=[]" >> "$GITHUB_OUTPUT"
+          else
+            echo "mods=$(printf '%s\n' "${changed[@]}" | jq -R . | jq -s -c .)" >> "$GITHUB_OUTPUT"
+          fi
 
   test:
     needs: discover
-    if: ${{ needs.discover.outputs.mods != '[]' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -79,7 +86,7 @@ jobs:
           flags: ${{ matrix.mod }}
 
   tag:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.discover.outputs.mods != '[]' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.discover.outputs.changed != '[]' }}
     needs:
       - discover
       - test
@@ -89,7 +96,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mod: ${{ fromJSON(needs.discover.outputs.mods) }}
+        mod: ${{ fromJSON(needs.discover.outputs.changed) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -111,3 +118,17 @@ jobs:
           [ -z "$tag" ] && exit 0
           git push origin "$tag"
           gh release create "$tag" --title "$tag" --generate-notes
+
+  ci:
+    needs:
+      - discover
+      - test
+      - tag
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify
+        run: |
+          [ "${{ needs.discover.result }}" = "success" ] || exit 1
+          case "${{ needs.test.result }}" in success|skipped) ;; *) exit 1 ;; esac
+          case "${{ needs.tag.result }}"  in success|skipped) ;; *) exit 1 ;; esac
