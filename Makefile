@@ -57,6 +57,7 @@ ${MODS_CHECK}:
 update-deps: ${MODS_UPDATE} ## Update all deps
 .PHONY: ${MODS_UPDATE}
 ${MODS_UPDATE}:
+	cd ./${@F} && go mod edit -go=$$(go env GOVERSION | sed 's/^go//')
 	cd ./${@F} && go get -u -t ./...
 	cd ./${@F} && go get -u tool
 	cd ./${@F} && go mod tidy
