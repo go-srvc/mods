@@ -110,14 +110,11 @@ jobs:
       - name: Tag
         run: make tag/${{ matrix.mod }}
 
-      - name: Push tag and create release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push tag
         run: |
           tag=$(git tag --points-at HEAD --list '${{ matrix.mod }}/v*' | head -1)
           [ -z "$tag" ] && exit 0
           git ls-remote --exit-code origin "refs/tags/$tag" >/dev/null 2>&1 || git push origin "$tag"
-          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --title "$tag" --generate-notes
 
   ci:
     needs:
