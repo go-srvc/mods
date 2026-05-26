@@ -59,8 +59,8 @@ GO_VERSION    ?= $(shell go env GOVERSION | sed 's/^go//')
 
 ${MODS_UPDATE}:
 	cd ./${@F} && go mod edit -go=${GO_VERSION}
-	cd ./${@F} && go get -u -t ./...
-	cd ./${@F} && go get -u tool
+	cd ./${@F} && pkgs=$$(go mod edit -json | jq -r '[(.Tool[]?.Path), (.Require[]? | select(.Indirect | not) | .Path)] | map(. + "@latest") | .[]'); \
+	  [ -z "$$pkgs" ] || go get $$pkgs
 	cd ./${@F} && go mod tidy
 
 .PHONY: api-check
