@@ -12,6 +12,7 @@ require (
 	github.com/go-srvc/srvc v1.0.0
 	github.com/heppu/errgroup v1.0.0
 	github.com/stretchr/testify v1.11.1
+	go.uber.org/goleak v1.3.0
 )
 
 require (
