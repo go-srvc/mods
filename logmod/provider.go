@@ -141,7 +141,7 @@ func WithStdout(opt ...stdoutlog.Option) Opt {
 func WithEnv() Opt {
 	return func(p *Provider) error {
 		switch strings.ToLower(cmp.Or(os.Getenv("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"), os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL"))) {
-		case "http/protobuf", "http/json":
+		case "http/protobuf":
 			return WithHTTP()(p)
 		case "grpc":
 			return WithGRPC()(p)
