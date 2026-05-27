@@ -66,8 +66,8 @@ func (p *Provider) Run() error {
 func (p *Provider) Stop() error {
 	close(p.done)
 	flushErr := p.provider.ForceFlush(context.Background())
-	shutdowErr := p.provider.Shutdown(context.Background())
-	return errors.Join(flushErr, shutdowErr)
+	shutdownErr := p.provider.Shutdown(context.Background())
+	return errors.Join(flushErr, shutdownErr)
 }
 
 func (p *Provider) ID() string { return ID }

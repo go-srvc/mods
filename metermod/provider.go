@@ -70,8 +70,8 @@ func (p *Provider) Stop() error {
 	if flushErr != nil {
 		flushErr = fmt.Errorf("%w: %w", ErrFlushFailed, flushErr)
 	}
-	shutdowErr := p.provider.Shutdown(context.Background())
-	return errors.Join(flushErr, shutdowErr)
+	shutdownErr := p.provider.Shutdown(context.Background())
+	return errors.Join(flushErr, shutdownErr)
 }
 
 func (p *Provider) ID() string { return ID }
