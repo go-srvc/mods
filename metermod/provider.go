@@ -126,7 +126,7 @@ func WithGRPC() Opt {
 // WithStdout creates meter provider with stdout exporter.
 func WithStdout(opt ...stdoutmetric.Option) Opt {
 	return func(p *Provider) error {
-		exp, err := stdoutmetric.New()
+		exp, err := stdoutmetric.New(opt...)
 		if err != nil {
 			return fmt.Errorf("failed to create stdout exporter: %w", err)
 		}

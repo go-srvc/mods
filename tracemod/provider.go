@@ -133,7 +133,7 @@ func WithGRPC() Opt {
 // WithStdout creates trace provider with stdout exporter.
 func WithStdout(opt ...stdouttrace.Option) Opt {
 	return func(p *Provider) error {
-		exp, err := stdouttrace.New()
+		exp, err := stdouttrace.New(opt...)
 		if err != nil {
 			return fmt.Errorf("failed to create stdout exporter: %w", err)
 		}
