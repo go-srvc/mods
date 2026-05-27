@@ -54,8 +54,7 @@ func (d *DB) Run() error {
 
 func (d *DB) Stop() error {
 	defer close(d.done)
-	d.dbx.Close()
-	return nil
+	return d.dbx.Close()
 }
 
 func (d *DB) ID() string { return ID }
