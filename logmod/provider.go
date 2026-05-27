@@ -66,22 +66,22 @@ func (p *Provider) Run() error {
 func (p *Provider) Stop() error {
 	close(p.done)
 	flushErr := p.provider.ForceFlush(context.Background())
-	shutdowErr := p.provider.Shutdown(context.Background())
-	return errors.Join(flushErr, shutdowErr)
+	shutdownErr := p.provider.Shutdown(context.Background())
+	return errors.Join(flushErr, shutdownErr)
 }
 
 func (p *Provider) ID() string { return ID }
 
 type Opt func(*Provider) error
 
-// WithProvider sets the underlying trace provider for module.
+// WithProvider sets the underlying log provider for module.
 func WithProvider(exp *log.LoggerProvider) Opt {
 	return WithProviderFn(func() (*log.LoggerProvider, error) {
 		return exp, nil
 	})
 }
 
-// WithProviderFn sets the underlying trace provider for module using given function.
+// WithProviderFn sets the underlying log provider for module using given function.
 func WithProviderFn(fn func() (*log.LoggerProvider, error)) Opt {
 	return func(p *Provider) error {
 		prov, err := fn()
@@ -131,17 +131,17 @@ func WithStdout(opt ...stdoutlog.Option) Opt {
 	}
 }
 
-// WithEnv uses OTEL_EXPORTER_OTLP_TRACES_PROTO and OTEL_EXPORTER_OTLP_PROTO environment variable to set exporter.
+// WithEnv uses OTEL_EXPORTER_OTLP_TRACES_PROTOCOL and OTEL_EXPORTER_OTLP_PROTOCOL environment variable to set exporter.
 // Accepted values are:
-//   - http
+//   - http/protobuf
 //   - grpc
 //   - stdout
 //
 // If no value is provided, stdout is used.
 func WithEnv() Opt {
 	return func(p *Provider) error {
-		switch strings.ToLower(cmp.Or(os.Getenv("OTEL_EXPORTER_OTLP_TRACES_PROTO"), os.Getenv("OTEL_EXPORTER_OTLP_PROTO"))) {
-		case "http":
+		switch strings.ToLower(cmp.Or(os.Getenv("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"), os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL"))) {
+		case "http/protobuf":
 			return WithHTTP()(p)
 		case "grpc":
 			return WithGRPC()(p)

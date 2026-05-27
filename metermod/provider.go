@@ -70,8 +70,8 @@ func (p *Provider) Stop() error {
 	if flushErr != nil {
 		flushErr = fmt.Errorf("%w: %w", ErrFlushFailed, flushErr)
 	}
-	shutdowErr := p.provider.Shutdown(context.Background())
-	return errors.Join(flushErr, shutdowErr)
+	shutdownErr := p.provider.Shutdown(context.Background())
+	return errors.Join(flushErr, shutdownErr)
 }
 
 func (p *Provider) ID() string { return ID }
@@ -126,7 +126,7 @@ func WithGRPC() Opt {
 // WithStdout creates meter provider with stdout exporter.
 func WithStdout(opt ...stdoutmetric.Option) Opt {
 	return func(p *Provider) error {
-		exp, err := stdoutmetric.New()
+		exp, err := stdoutmetric.New(opt...)
 		if err != nil {
 			return fmt.Errorf("failed to create stdout exporter: %w", err)
 		}
@@ -135,17 +135,17 @@ func WithStdout(opt ...stdoutmetric.Option) Opt {
 	}
 }
 
-// WithEnv uses OTEL_EXPORTER_OTLP_TRACES_PROTO and OTEL_EXPORTER_OTLP_PROTO environment variable to set exporter.
+// WithEnv uses OTEL_EXPORTER_OTLP_TRACES_PROTOCOL and OTEL_EXPORTER_OTLP_PROTOCOL environment variable to set exporter.
 // Accepted values are:
-//   - http
+//   - http/protobuf
 //   - grpc
 //   - stdout
 //
 // If no value is provided, stdout is used.
 func WithEnv() Opt {
 	return func(p *Provider) error {
-		switch strings.ToLower(cmp.Or(os.Getenv("OTEL_EXPORTER_OTLP_TRACES_PROTO"), os.Getenv("OTEL_EXPORTER_OTLP_PROTO"))) {
-		case "http":
+		switch strings.ToLower(cmp.Or(os.Getenv("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"), os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL"))) {
+		case "http/protobuf":
 			return WithHTTP()(p)
 		case "grpc":
 			return WithGRPC()(p)
