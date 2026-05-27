@@ -104,7 +104,7 @@ func WithProviderFn(fn func() (*trace.TracerProvider, error)) Opt {
 	}
 }
 
-// WithHTTP creates meter provider with periodic reader using http exporter from OTEL_* env configs.
+// WithHTTP creates trace provider with batch span processor using http exporter from OTEL_* env configs.
 // Env variables: https://pkg.go.dev/go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp
 func WithHTTP() Opt {
 	return func(p *Provider) error {
@@ -117,7 +117,7 @@ func WithHTTP() Opt {
 	}
 }
 
-// WithGRPC creates meter provider with periodic reader using grpc exporter from OTEL_* env configs.
+// WithGRPC creates trace provider with batch span processor using grpc exporter from OTEL_* env configs.
 // Env variables: https://pkg.go.dev/go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc
 func WithGRPC() Opt {
 	return func(p *Provider) error {
