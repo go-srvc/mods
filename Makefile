@@ -8,6 +8,7 @@ MODS_UPDATE   := ${MOD_NAMES:%=update-deps/%}
 MODS_DOWNLOAD := ${MOD_NAMES:%=download/%}
 MODS_APICHECK := ${MOD_NAMES:%=api-check/%}
 MODS_TAG      := ${MOD_NAMES:%=tag/%}
+MODS_CROSS    := ${MOD_NAMES:%=cross-check/%}
 
 REMOTE        ?= origin
 mod_last_tag   = $(shell git ls-remote --tags --refs ${REMOTE} '$(1)/v*' | sed 's|.*refs/tags/||' | sort -V | tail -1)
@@ -85,6 +86,14 @@ ${MODS_TAG}:
 	  test -n "$$v" || { echo "${MOD}: gorelease did not suggest a version" >&2; exit 1; }; \
 	fi; \
 	git tag "${MOD}/$$v" && echo "tagged ${MOD}/$$v"
+
+.PHONY: cross-check
+cross-check: ${MODS_CROSS} ## Cross-compile each mod for windows and darwin
+
+.PHONY: ${MODS_CROSS}
+${MODS_CROSS}:
+	cd ./${@F} && GOOS=windows go build ./...
+	cd ./${@F} && GOOS=darwin  go build ./...
 
 .PHONY: clean
 clean: ## Clean files

@@ -67,6 +67,9 @@ jobs:
       - name: API check
         run: make api-check/${{ matrix.mod }}
 
+      - name: Cross-compile
+        run: make cross-check/${{ matrix.mod }}
+
       - name: Test
         run: make test/${{ matrix.mod }}
 
