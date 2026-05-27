@@ -74,14 +74,14 @@ func (p *Provider) ID() string { return ID }
 
 type Opt func(*Provider) error
 
-// WithProvider sets the underlying trace provider for module.
+// WithProvider sets the underlying log provider for module.
 func WithProvider(exp *log.LoggerProvider) Opt {
 	return WithProviderFn(func() (*log.LoggerProvider, error) {
 		return exp, nil
 	})
 }
 
-// WithProviderFn sets the underlying trace provider for module using given function.
+// WithProviderFn sets the underlying log provider for module using given function.
 func WithProviderFn(fn func() (*log.LoggerProvider, error)) Opt {
 	return func(p *Provider) error {
 		prov, err := fn()
