@@ -135,7 +135,7 @@ func WithStdout(opt ...stdoutmetric.Option) Opt {
 	}
 }
 
-// WithEnv uses OTEL_EXPORTER_OTLP_TRACES_PROTOCOL and OTEL_EXPORTER_OTLP_PROTOCOL environment variable to set exporter.
+// WithEnv uses OTEL_EXPORTER_OTLP_METRICS_PROTOCOL and OTEL_EXPORTER_OTLP_PROTOCOL environment variable to set exporter.
 // Accepted values are:
 //   - http/protobuf
 //   - grpc
@@ -144,7 +144,7 @@ func WithStdout(opt ...stdoutmetric.Option) Opt {
 // If no value is provided, stdout is used.
 func WithEnv() Opt {
 	return func(p *Provider) error {
-		switch strings.ToLower(cmp.Or(os.Getenv("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"), os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL"))) {
+		switch strings.ToLower(cmp.Or(os.Getenv("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL"), os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL"))) {
 		case "http/protobuf":
 			return WithHTTP()(p)
 		case "grpc":
