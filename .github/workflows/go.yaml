@@ -119,14 +119,8 @@ jobs:
           [ -z "$tag" ] && exit 0
           git ls-remote --exit-code origin "refs/tags/$tag" >/dev/null 2>&1 || git push origin "$tag"
 
-  website:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.discover.outputs.changed != '[]' }}
-    needs:
-      - discover
-      - tag
-    runs-on: ubuntu-latest
-    steps:
-      - env:
+      - name: Trigger website Deploy
+        env:
           GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: gh workflow run deploy.yml -R go-srvc/website
 
@@ -135,13 +129,11 @@ jobs:
       - discover
       - test
       - tag
-      - website
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Verify
         run: |
           [ "${{ needs.discover.result }}" = "success" ] || exit 1
-          case "${{ needs.test.result }}"    in success|skipped) ;; *) exit 1 ;; esac
-          case "${{ needs.tag.result }}"     in success|skipped) ;; *) exit 1 ;; esac
-          case "${{ needs.website.result }}" in success|skipped) ;; *) exit 1 ;; esac
+          case "${{ needs.test.result }}" in success|skipped) ;; *) exit 1 ;; esac
+          case "${{ needs.tag.result }}"  in success|skipped) ;; *) exit 1 ;; esac
