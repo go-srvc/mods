@@ -56,7 +56,9 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: ./${{ matrix.mod }}/go.mod
-          cache-dependency-path: ./${{ matrix.mod }}/go.sum
+          cache-dependency-path: |
+            ./internal/tools/go.sum
+            ./${{ matrix.mod }}/go.sum
 
       - name: Tidy check
         run: make tidy-check/${{ matrix.mod }}
@@ -108,7 +110,9 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: ./${{ matrix.mod }}/go.mod
-          cache-dependency-path: ./${{ matrix.mod }}/go.sum
+          cache-dependency-path: |
+            ./internal/tools/go.sum
+            ./${{ matrix.mod }}/go.sum
 
       - name: Tag
         run: make tag/${{ matrix.mod }}
