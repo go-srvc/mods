@@ -9,10 +9,10 @@ tool (
 )
 
 require (
-	github.com/go-srvc/srvc v1.0.0
+	github.com/go-srvc/srvc v1.1.1
 	github.com/heppu/errgroup v1.0.0
 	github.com/stretchr/testify v1.11.1
-	go.opentelemetry.io/contrib/bridges/otelslog v0.18.0
+	go.opentelemetry.io/contrib/bridges/otelslog v0.19.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.20.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.20.0
 	go.opentelemetry.io/otel/exporters/stdout/stdoutlog v0.20.0
@@ -229,7 +229,7 @@ require (
 	go.uber.org/zap v1.28.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/exp v0.0.0-20260527015227-08cc5374adb3 // indirect
+	golang.org/x/exp v0.0.0-20260529124908-c761662dc8c9 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20260508232706-74f9aab9d74a // indirect
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.55.0 // indirect
