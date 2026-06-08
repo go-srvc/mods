@@ -24,7 +24,6 @@ func TestProvider(t *testing.T) {
 		opts         []metermod.Opt
 		contentType  string
 		expectCalled bool
-		err          error
 	}{
 		{
 			name:         "Default",
@@ -36,14 +35,6 @@ func TestProvider(t *testing.T) {
 			opts:         []metermod.Opt{metermod.WithHTTP()},
 			contentType:  "application/x-protobuf",
 			expectCalled: true,
-		},
-		{
-			// We dont have proper GRPC server so exporter will retry until it reached OTEL_EXPORTER_OTLP_METRICS_TIMEOUT
-			name:         "WithGRPC",
-			opts:         []metermod.Opt{metermod.WithGRPC()},
-			contentType:  "",
-			expectCalled: true,
-			err:          metermod.ErrFlushFailed,
 		},
 	}
 
@@ -58,7 +49,6 @@ func TestProvider(t *testing.T) {
 			t.Cleanup(srv.Close)
 
 			t.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", srv.URL)
-			t.Setenv("OTEL_EXPORTER_OTLP_METRICS_TIMEOUT", "10") // Faster timeout for GRPC test
 
 			p := metermod.New(tt.opts...)
 			require.NoError(t, p.Init())
@@ -68,12 +58,27 @@ func TestProvider(t *testing.T) {
 			_, span := otel.GetTracerProvider().Tracer("test").Start(context.Background(), "test")
 			span.End()
 
-			require.ErrorIs(t, p.Stop(), tt.err)
+			require.NoError(t, p.Stop())
 			require.NoError(t, wg.Wait())
 			require.Equal(t, "metermod", p.ID())
 			require.Equal(t, tt.expectCalled, called.Load())
 		})
 	}
+}
+
+// Shutdown does a final flush, and Stop must return any error from it. Pointing the
+// exporter at a closed port makes that flush fail.
+func TestProvider_Stop_SurfacesExportError(t *testing.T) {
+	t.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://127.0.0.1:1")
+	t.Setenv("OTEL_EXPORTER_OTLP_METRICS_TIMEOUT", "10") // Fail fast instead of retrying.
+
+	p := metermod.New(metermod.WithGRPC())
+	require.NoError(t, p.Init())
+	wg := &errgroup.ErrGroup{}
+	wg.Go(p.Run)
+
+	require.Error(t, p.Stop())
+	require.NoError(t, wg.Wait())
 }
 
 func TestProvider_WithProvider_nil(t *testing.T) {

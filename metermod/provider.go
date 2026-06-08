@@ -4,7 +4,6 @@ package metermod
 import (
 	"cmp"
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -19,10 +18,7 @@ import (
 
 const ID = "metermod"
 
-const (
-	ErrMissingProvider = errStr("meter provider not set")
-	ErrFlushFailed     = errStr("failed to flush remaining metrics")
-)
+const ErrMissingProvider = errStr("meter provider not set")
 
 type errStr string
 
@@ -66,12 +62,7 @@ func (p *Provider) Run() error {
 
 func (p *Provider) Stop() error {
 	close(p.done)
-	flushErr := p.provider.ForceFlush(context.Background())
-	if flushErr != nil {
-		flushErr = fmt.Errorf("%w: %w", ErrFlushFailed, flushErr)
-	}
-	shutdownErr := p.provider.Shutdown(context.Background())
-	return errors.Join(flushErr, shutdownErr)
+	return p.provider.Shutdown(context.Background())
 }
 
 func (p *Provider) ID() string { return ID }
