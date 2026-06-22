@@ -1,8 +1,8 @@
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/go-srvc/srvc v1.3.0 h1:H8H9HPltk1FKjHGTuU/Da+CsmPNkdEm2ekIjr9BMwcY=
-github.com/go-srvc/srvc v1.3.0/go.mod h1:iG7GDKRYlWtCqlQaylJF2cUtyVMrj6j5MuLZzj2BCaY=
+github.com/go-srvc/srvc v1.4.0 h1:7POvP8i568kRhUXweL3JQvkCzKY+RpT7uGZwtE57a2c=
+github.com/go-srvc/srvc v1.4.0/go.mod h1:NGi9gl9KRF4ZebrQ/HEGk/EhZ3SVcojjsRl7zwgdi0g=
 github.com/heppu/errgroup v1.0.0 h1:Th073WwEpGARMkxWQnybOfcMuvozkBr7Kqvn2tmx7iU=
 github.com/heppu/errgroup v1.0.0/go.mod h1:eiBTIbuHZPfUsa978/V4HmR1p1oSqtNTpc8XiqetgIg=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
