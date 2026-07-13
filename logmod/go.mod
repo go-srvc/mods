@@ -1,6 +1,6 @@
 module github.com/go-srvc/mods/logmod
 
-go 1.26.4
+go 1.26.5
 
 require (
 	github.com/go-srvc/srvc v1.4.0
