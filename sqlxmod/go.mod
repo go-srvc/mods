@@ -4,7 +4,7 @@ go 1.26.5
 
 require (
 	github.com/XSAM/otelsql v0.43.0
-	github.com/go-srvc/srvc v1.4.0
+	github.com/go-srvc/srvc v1.5.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.12.3
 	github.com/stretchr/testify v1.11.1
