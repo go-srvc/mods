@@ -3,7 +3,7 @@ module github.com/go-srvc/mods/httpmod
 go 1.26.5
 
 require (
-	github.com/go-srvc/srvc v1.5.1
+	github.com/go-srvc/srvc v1.5.2
 	github.com/heppu/errgroup v1.0.0
 	github.com/stretchr/testify v1.11.1
 )
