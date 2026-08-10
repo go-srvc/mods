@@ -18,7 +18,10 @@ import (
 
 const ID = "logmod"
 
-const ErrMissingProvider = errStr("log provider not set")
+const (
+	ErrMissingProvider = errStr("log provider not set")
+	ErrFlushFailed     = errStr("failed to flush remaining logs")
+)
 
 type errStr string
 
@@ -66,6 +69,9 @@ func (p *Provider) Run() error {
 func (p *Provider) Stop() error {
 	close(p.done)
 	flushErr := p.provider.ForceFlush(context.Background())
+	if flushErr != nil {
+		flushErr = fmt.Errorf("%w: %w", ErrFlushFailed, flushErr)
+	}
 	shutdownErr := p.provider.Shutdown(context.Background())
 	return errors.Join(flushErr, shutdownErr)
 }

@@ -25,6 +25,7 @@ func TestProvider(t *testing.T) {
 		opts         []logmod.Opt
 		contentType  string
 		expectCalled bool
+		err          error
 	}{
 		{
 			name:         "Defaults",
@@ -43,6 +44,7 @@ func TestProvider(t *testing.T) {
 			opts:         []logmod.Opt{logmod.WithGRPC()},
 			contentType:  "",
 			expectCalled: true,
+			err:          logmod.ErrFlushFailed,
 		},
 	}
 
@@ -67,7 +69,7 @@ func TestProvider(t *testing.T) {
 			l := otelslog.NewLogger("test")
 			l.Info("test")
 
-			require.NoError(t, p.Stop())
+			require.ErrorIs(t, p.Stop(), tt.err)
 			require.NoError(t, wg.Wait())
 			require.Equal(t, "logmod", p.ID())
 			require.Equal(t, tt.expectCalled, called.Load())
