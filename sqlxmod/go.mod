@@ -1,13 +1,13 @@
 module github.com/go-srvc/mods/sqlxmod
 
-go 1.26.6
+go 1.27.0
 
 require (
 	github.com/XSAM/otelsql v0.43.0
-	github.com/go-srvc/srvc v1.5.2
+	github.com/go-srvc/srvc v1.6.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.12.3
-	github.com/stretchr/testify v1.12.0
+	github.com/stretchr/testify v1.12.1
 	go.opentelemetry.io/otel v1.45.0
 )
 
@@ -18,5 +18,5 @@ require (
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel/metric v1.45.0 // indirect
 	go.opentelemetry.io/otel/trace v1.45.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 )
