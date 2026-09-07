@@ -1,9 +1,9 @@
 module github.com/go-srvc/mods/tracemod
 
-go 1.27.0
+go 1.27.1
 
 require (
-	github.com/go-srvc/srvc v1.7.0
+	github.com/go-srvc/srvc v1.8.0
 	github.com/heppu/errgroup v1.0.0
 	github.com/stretchr/testify v1.12.1
 	go.opentelemetry.io/otel v1.46.0
