@@ -1,5 +1,5 @@
-github.com/go-srvc/srvc v1.7.0 h1:I4uh04epATgKTpPpe1mT4o8iuk+fPCSsLHmuiMo44Pw=
-github.com/go-srvc/srvc v1.7.0/go.mod h1:+3LHhLTb2BEz32BTgS0YgNUbk3nK9tQ9CI3Ypb7iqvA=
+github.com/go-srvc/srvc v1.8.0 h1:BGAmN/GSlWCMRkkInAEaodxRyYgcUht7SCkL5GUzZ4Q=
+github.com/go-srvc/srvc v1.8.0/go.mod h1:XRub5u/hNIZiXKuNFlY+jDn9G7IaX7l8i2FDcuZJZc0=
 github.com/heppu/errgroup v1.0.0 h1:Th073WwEpGARMkxWQnybOfcMuvozkBr7Kqvn2tmx7iU=
 github.com/heppu/errgroup v1.0.0/go.mod h1:eiBTIbuHZPfUsa978/V4HmR1p1oSqtNTpc8XiqetgIg=
 github.com/stretchr/testify v1.12.1 h1:EuwCh5fleGS7H32xRwO3wRGT7DxrDhLAT6FF8MpWDWE=
