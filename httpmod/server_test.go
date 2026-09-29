@@ -1,10 +1,16 @@
 package httpmod_test
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
+	"net"
 	"net/http"
 	"testing"
 	"time"
@@ -29,14 +35,62 @@ func TestListenErr(t *testing.T) {
 }
 
 func TestHTTPS(t *testing.T) {
-	srv := httpmod.New(httpmod.WithServer(&http.Server{
-		Addr:              "127.0.0.1:0",
-		ReadHeaderTimeout: time.Second,
-		TLSConfig:         &tls.Config{}, //nolint:gosec
-	}))
-	err := srv.Init()
-	require.NoError(t, err)
+	cert, roots := selfSignedCert(t)
+	srv := httpmod.New(
+		httpmod.WithAddr("127.0.0.1:0"),
+		httpmod.WithTLSConfig(&tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}),
+		httpmod.WithHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, r.Proto)
+		})),
+	)
+	require.NoError(t, srv.Init())
 	require.Contains(t, srv.URL(), "https://127.0.0.1:")
+	wg := &errgroup.ErrGroup{}
+	wg.Go(srv.Run)
+
+	client := &http.Client{Transport: &http.Transport{
+		TLSClientConfig:   &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12},
+		ForceAttemptHTTP2: true,
+	}}
+	resp, err := client.Get(srv.URL())
+	require.NoError(t, err)
+	data, err := io.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	assert.NoError(t, resp.Body.Close())
+	assert.NotNil(t, resp.TLS)
+	assert.Equal(t, "HTTP/2.0", string(data))
+
+	assert.NoError(t, srv.Stop())
+	assert.NoError(t, wg.Wait())
+}
+
+func TestHTTPSWithoutCertificate(t *testing.T) {
+	srv := httpmod.New(
+		httpmod.WithAddr("127.0.0.1:0"),
+		httpmod.WithTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12}),
+	)
+	require.Error(t, srv.Init())
+}
+
+func selfSignedCert(t *testing.T) (tls.Certificate, *x509.CertPool) {
+	t.Helper()
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	require.NoError(t, err)
+	tmpl := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().Add(time.Hour),
+		IPAddresses:  []net.IP{net.ParseIP("127.0.0.1")},
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+	}
+	der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &key.PublicKey, key)
+	require.NoError(t, err)
+	leaf, err := x509.ParseCertificate(der)
+	require.NoError(t, err)
+	roots := x509.NewCertPool()
+	roots.AddCert(leaf)
+	return tls.Certificate{Certificate: [][]byte{der}, PrivateKey: key, Leaf: leaf}, roots
 }
 
 func TestServer(t *testing.T) {

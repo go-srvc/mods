@@ -31,3 +31,20 @@ func hello(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "hello, world")
 }
 ```
+
+## TLS
+
+Set a `tls.Config` with a certificate and the server serves HTTPS, including HTTP/2.
+
+```go
+cert, err := tls.LoadX509KeyPair("server.crt", "server.key")
+if err != nil {
+	log.Fatal(err)
+}
+
+httpmod.New(
+	httpmod.WithAddr(":8443"),
+	httpmod.WithTLSConfig(&tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}),
+	httpmod.WithHandler(http.HandlerFunc(hello)),
+)
+```
