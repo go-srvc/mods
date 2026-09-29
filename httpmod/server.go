@@ -3,6 +3,7 @@ package httpmod
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net"
@@ -40,6 +41,10 @@ func (s *Server) Init() error {
 		}
 	}
 
+	if cfg := s.srv.TLSConfig; cfg != nil && len(cfg.Certificates) == 0 && cfg.GetCertificate == nil && cfg.GetConfigForClient == nil {
+		return errors.New("TLSConfig has no Certificates, GetCertificate or GetConfigForClient")
+	}
+
 	ln, err := net.Listen("tcp", s.srv.Addr)
 	if err != nil {
 		return fmt.Errorf("failed to init listener: %w", err)
@@ -60,9 +65,15 @@ func (s *Server) URL() string {
 	return s.url
 }
 
-// Run starts serving http request and can be called after initialization.
+// Run starts serving http requests, over TLS when TLSConfig is set, and can be called after initialization.
 func (s *Server) Run() error {
-	err := s.srv.Serve(s.ln)
+	var err error
+	if s.srv.TLSConfig != nil {
+		// ServeTLS also enables HTTP/2 through ALPN, a plain tls.NewListener would not.
+		err = s.srv.ServeTLS(s.ln, "", "")
+	} else {
+		err = s.srv.Serve(s.ln)
+	}
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
@@ -131,6 +142,14 @@ func WithHandlerFn(fn func() (http.Handler, error)) Opt {
 			return err
 		}
 		s.srv.Handler = h
+		return nil
+	}
+}
+
+// WithTLSConfig sets http.Server.TLSConfig, which makes the server serve HTTPS.
+func WithTLSConfig(cfg *tls.Config) Opt {
+	return func(s *Server) error {
+		s.srv.TLSConfig = cfg
 		return nil
 	}
 }
