@@ -4,7 +4,6 @@ go 1.27.1
 
 require (
 	github.com/go-srvc/srvc v1.11.0
-	github.com/heppu/errgroup v1.0.0
 	github.com/stretchr/testify v1.12.1
 	go.opentelemetry.io/contrib/bridges/otelslog v0.20.1
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.22.0

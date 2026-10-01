@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/go-srvc/mods/logmod"
-	"github.com/heppu/errgroup"
+	"github.com/go-srvc/srvc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
@@ -63,7 +63,7 @@ func TestProvider(t *testing.T) {
 
 			p := logmod.New(tt.opts...)
 			require.NoError(t, p.Init())
-			wg := &errgroup.ErrGroup{}
+			wg := &srvc.ErrGroup{}
 			wg.Go(p.Run)
 
 			l := otelslog.NewLogger("test")
