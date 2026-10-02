@@ -46,6 +46,9 @@ jobs:
   test:
     needs: discover
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -76,17 +79,18 @@ jobs:
         run: make test/${{ matrix.mod }}
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           files: ./.output/coverage/${{ matrix.mod }}.txt
           flags: ${{ matrix.mod }}
 
       - name: Upload test results
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
+        uses: codecov/codecov-action@v7
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
+          report_type: test_results
           files: ./.output/junit/${{ matrix.mod }}.xml
           flags: ${{ matrix.mod }}
 
