@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/go-srvc/mods/httpmod"
-	"github.com/heppu/errgroup"
+	"github.com/go-srvc/srvc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,7 +45,7 @@ func TestHTTPS(t *testing.T) {
 	)
 	require.NoError(t, srv.Init())
 	require.Contains(t, srv.URL(), "https://127.0.0.1:")
-	wg := &errgroup.ErrGroup{}
+	wg := &srvc.ErrGroup{}
 	wg.Go(srv.Run)
 
 	client := &http.Client{Transport: &http.Transport{
@@ -104,7 +104,7 @@ func TestServer(t *testing.T) {
 
 	require.Equal(t, "httpmod", srv.ID())
 	require.NoError(t, srv.Init())
-	wg := &errgroup.ErrGroup{}
+	wg := &srvc.ErrGroup{}
 	wg.Go(srv.Run)
 
 	resp, err := http.Get(srv.URL())
@@ -130,7 +130,7 @@ func TestServerShutdownTimeout(t *testing.T) {
 	require.NoError(t, err)
 	url := srv.URL()
 
-	wg := &errgroup.ErrGroup{}
+	wg := &srvc.ErrGroup{}
 	wg.Go(srv.Run)
 
 	go func() {

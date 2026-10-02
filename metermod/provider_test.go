@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/go-srvc/mods/metermod"
-	"github.com/heppu/errgroup"
+	"github.com/go-srvc/srvc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel"
@@ -62,7 +62,7 @@ func TestProvider(t *testing.T) {
 
 			p := metermod.New(tt.opts...)
 			require.NoError(t, p.Init())
-			wg := &errgroup.ErrGroup{}
+			wg := &srvc.ErrGroup{}
 			wg.Go(p.Run)
 
 			_, span := otel.GetTracerProvider().Tracer("test").Start(context.Background(), "test")

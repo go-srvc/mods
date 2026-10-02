@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/go-srvc/mods/tickermod"
-	"github.com/heppu/errgroup"
+	"github.com/go-srvc/srvc"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
 )
@@ -32,7 +32,7 @@ func TestListener(t *testing.T) {
 		)
 
 		require.NoError(t, tickerMod.Init())
-		wg := &errgroup.ErrGroup{}
+		wg := &srvc.ErrGroup{}
 		wg.Go(tickerMod.Run)
 		<-called
 		require.NoError(t, tickerMod.Stop())
@@ -119,7 +119,7 @@ func TestFuncCtxReceivesLifecycleContext(t *testing.T) {
 		)
 
 		require.NoError(t, tickerMod.Init())
-		wg := &errgroup.ErrGroup{}
+		wg := &srvc.ErrGroup{}
 		wg.Go(tickerMod.Run)
 
 		ctx := <-captured
@@ -146,7 +146,7 @@ func TestShutdownDuringSlowTickReturnsPromptly(t *testing.T) {
 		)
 
 		require.NoError(t, tickerMod.Init())
-		wg := &errgroup.ErrGroup{}
+		wg := &srvc.ErrGroup{}
 		wg.Go(tickerMod.Run)
 
 		<-tickStarted
@@ -209,7 +209,7 @@ func TestFireOnStartTicksImmediately(t *testing.T) {
 		)
 
 		require.NoError(t, tickerMod.Init())
-		wg := &errgroup.ErrGroup{}
+		wg := &srvc.ErrGroup{}
 		wg.Go(tickerMod.Run)
 
 		select {
@@ -255,7 +255,7 @@ func TestFireOnStartResetsInterval(t *testing.T) {
 			}),
 		)
 		require.NoError(t, tickerMod.Init())
-		wg := &errgroup.ErrGroup{}
+		wg := &srvc.ErrGroup{}
 		wg.Go(tickerMod.Run)
 
 		first := <-ticks
@@ -287,7 +287,7 @@ func TestTickTimeoutBoundsTickFn(t *testing.T) {
 		)
 
 		require.NoError(t, tickerMod.Init())
-		wg := &errgroup.ErrGroup{}
+		wg := &srvc.ErrGroup{}
 		wg.Go(tickerMod.Run)
 
 		select {
@@ -322,7 +322,7 @@ func TestTickTimeoutNoOpWithoutFuncCtx(t *testing.T) {
 		)
 
 		require.NoError(t, tickerMod.Init())
-		wg := &errgroup.ErrGroup{}
+		wg := &srvc.ErrGroup{}
 		wg.Go(tickerMod.Run)
 
 		<-completed
