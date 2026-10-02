@@ -17,6 +17,10 @@ GOTESTSUM     := ${BIN}/gotestsum
 GORELEASE     := ${BIN}/gorelease
 
 REMOTE        ?= origin
+# gorelease resolves the base version through the Go module proxy, which can
+# lag behind GitHub for a while after a tag is pushed. Fetching our own modules
+# directly from the repo makes freshly created tags visible immediately.
+export GOPRIVATE := github.com/go-srvc/mods
 mod_last_tag   = $(shell git ls-remote --tags --refs ${REMOTE} '$(1)/v*' | sed 's|.*refs/tags/||' | sort -V | tail -1)
 
 .PHONY: all
