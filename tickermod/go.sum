@@ -1,5 +1,5 @@
-github.com/go-srvc/srvc v1.11.0 h1:B7ZXOULLtfdeE+a/JxUs4K73NLLpHBdn7YcQikhIKWM=
-github.com/go-srvc/srvc v1.11.0/go.mod h1:O2sIFl7po3o53Cptjyc8sz/4I4NFhy5vd2helT6hpPk=
+github.com/go-srvc/srvc v1.12.1 h1:4IIzyvgdF0O9wl2llVKzWa2nPNxJP6QSEYwjhNZ6owo=
+github.com/go-srvc/srvc v1.12.1/go.mod h1:w2tSD3UpJaRmTPmRZm8BqaW4D3arAFRZ6edfgObnLyU=
 github.com/stretchr/testify v1.12.1 h1:EuwCh5fleGS7H32xRwO3wRGT7DxrDhLAT6FF8MpWDWE=
 github.com/stretchr/testify v1.12.1/go.mod h1:MDEgiDPPsNp5cuIrHPPCyornHKgEVbtFUmoNlxoYthg=
 go.uber.org/goleak v1.3.0 h1:2K3zAYmnTNqV73imy9J1T3WC+gmCePx2hEGkimedGto=
