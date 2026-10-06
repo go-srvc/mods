@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
-	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/sdk/log"
 )
 
@@ -98,6 +98,6 @@ func TestProvider_SetsGlobalProvider(t *testing.T) {
 	p := logmod.New(logmod.WithProvider(lp))
 	require.NoError(t, p.Init())
 
-	gp := global.GetLoggerProvider()
+	gp := otel.GetLoggerProvider()
 	require.Equal(t, lp, gp)
 }
