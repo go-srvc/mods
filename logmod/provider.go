@@ -9,10 +9,10 @@ import (
 	"os"
 	"strings"
 
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
-	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/sdk/log"
 )
 
@@ -57,7 +57,7 @@ func (p *Provider) Init() error {
 		return ErrMissingProvider
 	}
 
-	global.SetLoggerProvider(p.provider)
+	otel.SetLoggerProvider(p.provider)
 	return nil
 }
 
