@@ -3,7 +3,7 @@ module github.com/go-srvc/mods/tickermod
 go 1.27.2
 
 require (
-	github.com/go-srvc/srvc v1.12.1
+	github.com/go-srvc/srvc v1.13.0
 	github.com/stretchr/testify v1.12.1
 	go.uber.org/goleak v1.3.0
 )
