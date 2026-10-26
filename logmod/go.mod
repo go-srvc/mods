@@ -1,9 +1,9 @@
 module github.com/go-srvc/mods/logmod
 
-go 1.27.2
+go 1.27.3
 
 require (
-	github.com/go-srvc/srvc v1.13.0
+	github.com/go-srvc/srvc v1.14.0
 	github.com/stretchr/testify v1.12.1
 	go.opentelemetry.io/contrib/bridges/otelslog v0.21.0
 	go.opentelemetry.io/otel v1.47.0
