@@ -1,9 +1,9 @@
 module github.com/go-srvc/mods/sigmod
 
-go 1.27.3
+go 1.27.4
 
 require (
-	github.com/go-srvc/srvc v1.15.0
+	github.com/go-srvc/srvc v1.15.1
 	github.com/stretchr/testify v1.12.1
 )
 
