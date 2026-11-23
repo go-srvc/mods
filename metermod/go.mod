@@ -3,7 +3,7 @@ module github.com/go-srvc/mods/metermod
 go 1.27.4
 
 require (
-	github.com/go-srvc/srvc v1.15.1
+	github.com/go-srvc/srvc v1.16.0
 	github.com/stretchr/testify v1.12.1
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.72.0
 	go.opentelemetry.io/otel v1.47.0
