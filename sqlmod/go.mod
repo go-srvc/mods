@@ -4,7 +4,7 @@ go 1.27.4
 
 require (
 	github.com/XSAM/otelsql v0.44.0
-	github.com/go-srvc/srvc v1.15.1
+	github.com/go-srvc/srvc v1.16.0
 	github.com/lib/pq v1.12.3
 	github.com/stretchr/testify v1.12.1
 	go.opentelemetry.io/otel v1.47.0
